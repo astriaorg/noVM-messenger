@@ -1099,6 +1099,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap-stdin"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "471df7896633bfc1e7d3da5b598422891e4cb8931210168ec63ea586e285803f"
+dependencies = [
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "cnidarium"
 version = "0.80.7"
 source = "git+https://github.com/penumbra-zone/penumbra.git?tag=v0.80.7#35f9f2f64a652b6055a39ff227e504636436cb7e"
@@ -5814,6 +5823,7 @@ dependencies = [
  "base64 0.22.1",
  "borsh",
  "bytes",
+ "clap-stdin",
  "cnidarium",
  "color-eyre",
  "config",

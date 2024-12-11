@@ -266,8 +266,7 @@ impl<T: StateWrite> StateWriteExt for T {}
 
 #[cfg(test)]
 mod tests {
-    use asset::TracePrefixed;
-    use astria_core::{generated::astria::primitive::v1::Address, Protobuf};
+
     use cnidarium::StateDelta;
     use futures::TryStreamExt as _;
 

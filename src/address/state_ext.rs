@@ -1,27 +1,13 @@
-use astria_core::primitive::v1::{
-    Address,
-    Bech32m,
-};
+use astria_core::primitive::v1::{Address, Bech32m};
 use astria_eyre::{
     anyhow_to_eyre,
-    eyre::{
-        Result,
-        WrapErr as _,
-        bail,
-        ensure,
-    },
+    eyre::{bail, ensure, Result, WrapErr as _},
 };
 use async_trait::async_trait;
-use cnidarium::{
-    StateRead,
-    StateWrite,
-};
+use cnidarium::{StateRead, StateWrite};
 use tracing::instrument;
 
-use super::storage::{
-    self,
-    keys,
-};
+use super::storage::{self, keys};
 use crate::storage::StoredValue;
 
 #[async_trait]

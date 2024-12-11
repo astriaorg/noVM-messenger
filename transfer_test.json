@@ -1,0 +1,20 @@
+{
+    "params": {
+        "nonce": 0,
+        "chain_id": "sequencer-test-chain-0"
+    },
+    "actions": [
+        {
+            "transfer": {
+                "to": {
+                    "bech32m": "astria1xnlvg0rle2u6auane79t4p27g8hxnj36ja960z"
+                },
+                "amount": {
+                    "lo": "10000"
+                },
+                "asset": "nria",
+                "fee_asset": "nria"
+            }
+        }
+    ]
+}

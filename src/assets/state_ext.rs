@@ -3,23 +3,15 @@ use std::borrow::Cow;
 use astria_core::primitive::v1::asset;
 use astria_eyre::{
     anyhow_to_eyre,
-    eyre::{
-        Result,
-        WrapErr as _,
-    },
+    eyre::{Result, WrapErr as _},
 };
 use async_trait::async_trait;
-use cnidarium::{
-    StateRead,
-    StateWrite,
-};
+use cnidarium::{StateRead, StateWrite};
 use tracing::instrument;
 
 use super::storage::{
     self,
-    keys::{
-        self,
-    },
+    keys::{self},
 };
 use crate::storage::StoredValue;
 

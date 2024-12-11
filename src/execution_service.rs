@@ -4,16 +4,15 @@ use astria_core::execution::v1::Block;
 
 use astria_core::generated::astria::execution::v1::execution_service_server::ExecutionService;
 use astria_core::generated::astria::execution::v1::{self as execution};
-use astria_core::generated::astria::protocol::transaction::v1::{Transaction, TransactionBody};
+use astria_core::generated::astria::protocol::transaction::v1::Transaction;
 use astria_core::generated::astria::sequencerblock::v1::rollup_data::Value::{
     Deposit, SequencedData,
 };
 use astria_core::primitive::v1::RollupId;
 use astria_core::Protobuf as _;
-use bytes::{buf, Buf, Bytes};
+use bytes::Bytes;
 use cnidarium::{StateDelta, Storage};
 use prost::Message as _;
-use prost::Name as _;
 use std::sync::Arc;
 
 use tonic::{Request, Response, Status};
