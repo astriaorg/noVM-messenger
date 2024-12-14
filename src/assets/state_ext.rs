@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use astria_core::primitive::v1::asset;
+use crate::primitive::v1::asset;
 use astria_eyre::{
     anyhow_to_eyre,
     eyre::{Result, WrapErr as _},

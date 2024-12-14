@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use astria_core::primitive::v1::asset::TracePrefixed as DomainTracePrefixed;
+use crate::primitive::v1::asset::TracePrefixed as DomainTracePrefixed;
 use astria_eyre::eyre::bail;
 use borsh::{BorshDeserialize, BorshSerialize};
 

@@ -1,16 +1,13 @@
-use crate::accounts::{storage, StateReadExt, StateWriteExt};
+use crate::accounts::{StateReadExt as _, StateWriteExt as _};
 use crate::config::Config;
-use crate::execution_service;
+use crate::generated::protocol::transaction::v1::Transaction;
 use crate::rollup::state_ext::StateWriteExt as RollupStateExt;
 use crate::snapshot::Snapshot;
-use crate::storage::keys::Asset;
+use crate::text::{StateReadExt as _, StateWriteExt as _};
+use crate::{execution_service, snapshot};
 use astria_core::execution::v1::Block;
 use astria_core::generated::astria;
 use astria_core::generated::astria::composer::v1::SubmitRollupTransactionRequest;
-use astria_core::generated::astria::protocol::transaction::v1::Transaction;
-use astria_core::primitive::v1::{AddressBuilder, RollupId};
-use astria_core::protocol::transaction::v1::action::Transfer;
-use astria_core::protocol::transaction::v1::TransactionBody;
 use astria_core::Protobuf;
 
 use astria_core::generated::astria::composer::v1::grpc_collector_service_client::GrpcCollectorServiceClient;
@@ -24,25 +21,23 @@ use prost::Message;
 use tonic::transport::Server;
 use tower::ServiceBuilder;
 use tracing::info;
-use warp::filters::fs::file;
 use warp::Filter;
 pub struct Rollup;
-use astria_core::crypto::SigningKey;
 use hex_literal::hex;
 use std::net::SocketAddr;
 use std::str::FromStr;
 const ALICE_ADDRESS_BYTES: [u8; 20] = hex!("1c0c490f1b5528d8173c5de46d131160e4b2c0c3");
 const BOB_ADDRESS_BYTES: [u8; 20] = hex!("34fec43c7fcab9aef3b3cf8aba855e41ee69ca3a");
 const ASTRIA_ADDRESS_PREFIX: &str = "astria";
-fn alice_address() -> astria_core::primitive::v1::Address {
-    astria_core::primitive::v1::Address::builder()
+fn alice_address() -> crate::primitive::v1::Address {
+    crate::primitive::v1::Address::builder()
         .array(ALICE_ADDRESS_BYTES)
         .prefix(ASTRIA_ADDRESS_PREFIX)
         .try_build()
         .unwrap()
 }
-fn bob_address() -> astria_core::primitive::v1::Address {
-    astria_core::primitive::v1::Address::builder()
+fn bob_address() -> crate::primitive::v1::Address {
+    crate::primitive::v1::Address::builder()
         .array(BOB_ADDRESS_BYTES)
         .prefix(ASTRIA_ADDRESS_PREFIX)
         .try_build()
@@ -60,16 +55,25 @@ impl Rollup {
             .await
             .map_err(anyhow_to_eyre)
             .wrap_err("failed to load storage backing chain state")?;
-        let submit_transaction = warp::path!("submit_transaction" / String)
+        let submit_transaction = warp::path!("submit_transaction")
             .and(warp::post())
             .and(with_composer(composer_client.clone()))
+            .and(warp::body::bytes())
             .and_then(handle_submit_transaction);
 
         let get_account_balance = warp::path!("get_account_balance" / String / String)
             .and(warp::get())
             .and(with_storage(storage.clone()))
             .and_then(handle_get_account_balance);
-        let routes = submit_transaction.or(get_account_balance);
+
+        let get_text_from_id = warp::path!("get_text_from_id" / u64)
+            .and(warp::get())
+            .and(with_storage(storage.clone()))
+            .and_then(handle_get_text_from_id);
+
+        let routes = submit_transaction
+            .or(get_account_balance)
+            .or(get_text_from_id);
 
         println!("Rest server listening on {}", 3030);
         // Spawn the server in a separate async task so it doesn't block the main program
@@ -93,7 +97,8 @@ impl Rollup {
             }),
         };
         let block = Block::try_from_raw(block).unwrap();
-        let address = astria_core::primitive::v1::Address::from_str(
+        let text = "itamar why?".to_string();
+        let address = crate::primitive::v1::Address::from_str(
             "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm",
         )
         .unwrap();
@@ -106,7 +111,8 @@ impl Rollup {
             .unwrap();
 
         delta.put_block(block, 0).unwrap();
-
+        delta.put_text(text, 0).unwrap();
+        delta.put_last_text_id(0).unwrap();
         delta.put_commitment_state(0, 0, 2).unwrap();
         let write = storage
             .clone()
@@ -122,6 +128,7 @@ impl Rollup {
         let execution_service = execution_service::RollupExecutionService {
             storage: storage.clone(),
         };
+
         info!("starting rollup");
         Server::builder()
             .add_service(ExecutionServiceServer::new(execution_service))
@@ -148,46 +155,26 @@ fn with_storage(
     warp::any().map(move || storage.clone())
 }
 
-fn read_transaction(
-    input: FileOrStdin,
-) -> eyre::Result<astria_core::protocol::transaction::v1::Transaction> {
-    let wire_body: <astria_core::protocol::transaction::v1::Transaction as Protobuf>::Raw =
-        serde_json::from_reader(std::io::BufReader::new(input.into_reader()?)).wrap_err_with(
-            || {
-                format!(
-                    "failed to parse input as json `{}`",
-                    astria_core::protocol::transaction::v1::Transaction::full_name()
-                )
-            },
-        )?;
-    astria_core::protocol::transaction::v1::Transaction::try_from_raw(wire_body)
-        .wrap_err("failed to validate transaction body")
-}
-
-// // Handler for `POST /create_game/{game_id}`
 async fn handle_submit_transaction(
-    path: String,
     mut composer_client: GrpcCollectorServiceClient<tonic::transport::channel::Channel>,
+    data: Bytes,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    let file_or_stdin = FileOrStdin::from_str(&path).unwrap();
-    let file = file_or_stdin.filename();
-    let transaction = read_transaction(file_or_stdin.clone())
-        .wrap_err_with(|| format!("to signed transaction from `{file}`"))
-        .unwrap();
-    println!(
+    info!("received transaction submission request: {:?}", data);
+    let raw_transaction: Transaction = Transaction::decode(data).unwrap();
+    info!(
         "submitting transaction to sequencer... raw transaction {:?}",
-        transaction
+        raw_transaction
     );
-    let transaction = astria_core::protocol::transaction::v1::Transaction::try_from_raw(
-        transaction.to_raw().clone(),
-    )
-    .unwrap();
-    let composer_response = composer_client
+    let transaction =
+        crate::protocol::transaction::v1::Transaction::try_from_raw(raw_transaction.clone())
+            .unwrap();
+
+    composer_client
         .submit_rollup_transaction(SubmitRollupTransactionRequest {
             rollup_id: Some(astria::primitive::v1::RollupId {
                 inner: Bytes::from_static(&[69_u8; 32]),
             }),
-            data: transaction.to_raw().encode_to_vec().into(),
+            data: raw_transaction.encode_to_vec().into(),
         })
         .await
         .unwrap();
@@ -197,7 +184,6 @@ async fn handle_submit_transaction(
     )))
 }
 
-// // Handler for `GET /game_status/{game_id}`
 async fn handle_get_account_balance(
     account: String,
     asset: String,
@@ -205,10 +191,10 @@ async fn handle_get_account_balance(
 ) -> Result<impl warp::Reply, warp::Rejection> {
     let snapshot = storage.latest_snapshot();
     let delta = cnidarium::StateDelta::new(snapshot);
-    let denom = astria_core::primitive::v1::asset::Denom::from_str(asset.as_str()).unwrap();
+    let denom = crate::primitive::v1::asset::Denom::from_str(asset.as_str()).unwrap();
     let account_balance = delta
         .get_account_balance(
-            &astria_core::primitive::v1::Address::from_str(account.as_str()).unwrap(),
+            &crate::primitive::v1::Address::from_str(account.as_str()).unwrap(),
             &denom,
         )
         .await
@@ -217,4 +203,15 @@ async fn handle_get_account_balance(
     return Ok(warp::reply::json(&response));
 
     // Err(_) => Err(warp::reject::not_found()),
+}
+
+async fn handle_get_text_from_id(
+    id: u64,
+    storage: Storage,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    let snapshot = storage.latest_snapshot();
+    let delta = cnidarium::StateDelta::new(snapshot);
+    let text = delta.get_text(id).await.unwrap();
+    let response = String::from(text);
+    return Ok(warp::reply::json(&response));
 }

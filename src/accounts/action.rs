@@ -1,4 +1,4 @@
-use astria_core::protocol::transaction::v1::action::Transfer;
+use crate::protocol::transaction::v1::action::Transfer;
 use astria_eyre::eyre::{ensure, Result, WrapErr as _};
 use cnidarium::{StateRead, StateWrite};
 
@@ -6,7 +6,6 @@ use super::AddressBytes;
 use crate::{
     accounts::{StateReadExt as _, StateWriteExt as _},
     address::StateReadExt as _,
-    rollup::state_ext::StateReadExt as _,
 };
 
 // #[async_trait::async_trait]
@@ -38,7 +37,7 @@ use crate::{
 // }
 
 pub(crate) async fn execute_transfer<S, TAddress>(
-    action: &Transfer,
+    action: &crate::protocol::transaction::v1::action::Transfer,
     from: &TAddress,
     mut state: S,
 ) -> Result<()>

@@ -1,14 +1,14 @@
 pub(crate) mod action;
-pub(crate) mod query;
 pub(crate) mod state_ext;
 pub(crate) mod storage;
 
-use astria_core::{
-    crypto::VerificationKey,
+use crate::{
     primitive::v1::{Address, ADDRESS_LEN},
     protocol::transaction::v1::Transaction,
 };
+use astria_core::crypto::VerificationKey;
 pub(crate) use state_ext::{StateReadExt, StateWriteExt};
+
 pub(crate) trait AddressBytes: Send + Sync {
     fn address_bytes(&self) -> &[u8; ADDRESS_LEN];
 

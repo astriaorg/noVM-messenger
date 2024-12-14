@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use astria_core::primitive::v1::asset::IbcPrefixed;
+use crate::primitive::v1::asset::IbcPrefixed;
 use astria_eyre::eyre::{OptionExt as _, Result, WrapErr as _};
 
 use crate::{
@@ -59,7 +59,7 @@ pub(in crate::accounts) fn extract_asset_from_key(key: &str) -> Result<IbcPrefix
 
 #[cfg(test)]
 mod tests {
-    use astria_core::primitive::v1::{asset::Denom, Address};
+    use crate::primitive::v1::{asset::Denom, Address};
 
     use super::*;
 

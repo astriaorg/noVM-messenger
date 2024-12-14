@@ -5,7 +5,7 @@ use std::{
     task::{ready, Context, Poll},
 };
 
-use astria_core::primitive::v1::asset::{self, TracePrefixed};
+use crate::primitive::v1::asset::{self, TracePrefixed};
 use astria_eyre::{
     anyhow_to_eyre,
     eyre::{OptionExt as _, Result, WrapErr as _},
@@ -25,13 +25,12 @@ use crate::{accounts::AddressBytes, storage::StoredValue};
 pub(crate) fn nria() -> TracePrefixed {
     "nria".parse().unwrap()
 }
-pub(crate) fn astria_address(bytes: &[u8]) -> astria_core::primitive::v1::Address {
-    let address: astria_core::primitive::v1::Address =
-        astria_core::primitive::v1::Address::builder()
-            .prefix("astria")
-            .slice(bytes)
-            .try_build()
-            .unwrap();
+pub(crate) fn astria_address(bytes: &[u8]) -> crate::primitive::v1::Address {
+    let address: crate::primitive::v1::Address = crate::primitive::v1::Address::builder()
+        .prefix("astria")
+        .slice(bytes)
+        .try_build()
+        .unwrap();
     address
 }
 
@@ -143,7 +142,7 @@ pub(crate) trait StateReadExt: StateRead + crate::assets::StateReadExt {
     where
         TAddress: AddressBytes,
         TAsset: Sync + Display,
-        &'a TAsset: Into<Cow<'a, asset::IbcPrefixed>>,
+        &'a TAsset: Into<Cow<'a, crate::primitive::v1::asset::IbcPrefixed>>,
     {
         let Some(bytes) = self
             .get_raw(&keys::balance(address, asset))
@@ -244,7 +243,7 @@ pub(crate) trait StateWriteExt: StateWrite {
     where
         TAddress: AddressBytes,
         TAsset: Sync + Display,
-        &'a TAsset: Into<Cow<'a, asset::IbcPrefixed>>,
+        &'a TAsset: Into<Cow<'a, crate::primitive::v1::asset::IbcPrefixed>>,
     {
         let balance = self
             .get_account_balance(address, asset)

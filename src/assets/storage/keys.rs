@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use astria_core::primitive::v1::asset::IbcPrefixed;
+use crate::primitive::v1::asset::IbcPrefixed;
 
 use crate::storage::keys::Asset;
 
@@ -17,7 +17,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use astria_core::primitive::v1::asset::Denom;
+    use crate::primitive::v1::asset::Denom;
 
     use super::*;
 

@@ -8,6 +8,7 @@ pub(crate) enum StoredValue<'a> {
     Account(crate::accounts::storage::Value),
     Asset(crate::assets::storage::Value<'a>),
     Address(crate::address::storage::Value<'a>),
+    Text(crate::text::storage::Value),
 }
 
 impl StoredValue<'_> {

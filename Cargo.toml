@@ -46,7 +46,7 @@ tracing-subscriber = { version = "0.3.17", features = [
 astria-sequencer = { git = "https://github.com/astriaorg/astria.git", package = "astria-sequencer" }
 futures = "0.3"
 bytes = "1.8.0"
-pbjson-types = { version = "0.6.0" }
+pbjson-types = { version = "0.6.0"}
 tower = { version = "0.5.1", features = ["full"] }
 tower-http = { version = "0.4", features = ["cors"] }
 async-trait = "0.1.83"
@@ -61,3 +61,9 @@ pin-project-lite = "0.2.15"
 prost = "0.12.6"
 hex-literal = "0.4.1"
 clap-stdin = "0.5.1"
+tonic-build = "0.12.3"
+indexmap = "1.7.0"
+thiserror = "2.0.7"
+insta = "1.41.1"
+bech32 = "0.11.0"
+base64-serde = "0.8.0"

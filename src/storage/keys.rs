@@ -4,7 +4,7 @@ use std::{
     str::FromStr,
 };
 
-use astria_core::primitive::v1::asset::{denom::ParseIbcPrefixedError, IbcPrefixed};
+use crate::primitive::v1::asset::{denom::ParseIbcPrefixedError, IbcPrefixed};
 
 use crate::accounts::AddressBytes;
 
@@ -69,7 +69,7 @@ mod tests {
     #[test]
     fn asset_key_to_string_parse_roundtrip() {
         let asset = "an/asset/with/a/prefix"
-            .parse::<astria_core::primitive::v1::asset::Denom>()
+            .parse::<crate::primitive::v1::asset::Denom>()
             .unwrap();
         let expected = Asset::from(&asset);
         let actual = expected.to_string().parse::<Asset>().unwrap();

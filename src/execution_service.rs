@@ -1,10 +1,10 @@
 use crate::accounts::action::execute_transfer;
 use crate::rollup::state_ext::{StateReadExt, StateWriteExt};
+use crate::text::action::execute_send_text;
 use astria_core::execution::v1::Block;
 
 use astria_core::generated::astria::execution::v1::execution_service_server::ExecutionService;
 use astria_core::generated::astria::execution::v1::{self as execution};
-use astria_core::generated::astria::protocol::transaction::v1::Transaction;
 use astria_core::generated::astria::sequencerblock::v1::rollup_data::Value::{
     Deposit, SequencedData,
 };
@@ -112,23 +112,31 @@ impl ExecutionService for RollupExecutionService {
         info!("soft_height: {:?}", block_height);
         // Process transactions
         for tx in transactions {
-            let raw_transaction = Transaction::decode(tx).unwrap();
+            let raw_transaction =
+                crate::generated::protocol::transaction::v1::Transaction::decode(tx.clone())
+                    .unwrap();
             info!("decoded transaction: {:?}", raw_transaction);
+
             let transaction =
-                astria_core::protocol::transaction::v1::Transaction::try_from_raw(raw_transaction)
+                crate::protocol::transaction::v1::Transaction::try_from_raw(raw_transaction)
                     .unwrap();
             let sender = transaction.verification_key().address_bytes();
             let actions = transaction.actions();
             for action in actions {
                 match action {
-                    astria_core::protocol::transaction::v1::Action::Transfer(transfer) => {
+                    crate::protocol::transaction::v1::Action::Transfer(transfer) => {
                         info!("executing transfer: {:?}", transfer);
-                        execute_transfer(transfer, sender, &mut state_delta)
+                        execute_transfer(&transfer, sender, &mut state_delta)
                             .await
                             .unwrap();
                     }
-                    _ => {}
-                }
+                    crate::protocol::transaction::v1::Action::Text(send_text) => {
+                        info!("executing send_text: {:?}", send_text);
+                        execute_send_text(&send_text, sender, &mut state_delta)
+                            .await
+                            .unwrap();
+                    }
+                };
             }
         }
         // proccess_transactions(transactions, self.storage.clone())

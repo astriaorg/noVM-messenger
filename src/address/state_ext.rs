@@ -1,4 +1,4 @@
-use astria_core::primitive::v1::{Address, Bech32m};
+use crate::primitive::v1::{Address, Bech32m};
 use astria_eyre::{
     anyhow_to_eyre,
     eyre::{bail, ensure, Result, WrapErr as _},
