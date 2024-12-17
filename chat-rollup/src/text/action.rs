@@ -1,6 +1,6 @@
-use crate::transaction::v1::action::Transfer;
 use astria_eyre::eyre::{ensure, Result, WrapErr as _};
 use cnidarium::{StateRead, StateWrite};
+use rollup_core::transaction::v1::action::Transfer;
 
 use crate::text::{StateReadExt as _, StateWriteExt as _};
 
@@ -33,7 +33,7 @@ use crate::text::{StateReadExt as _, StateWriteExt as _};
 // }
 
 pub(crate) async fn execute_send_text<S, String>(
-    action: &crate::transaction::v1::action::SendText,
+    action: &rollup_core::transaction::v1::action::SendText,
     from: &String,
     mut state: S,
 ) -> Result<()>
