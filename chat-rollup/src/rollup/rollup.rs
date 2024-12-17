@@ -1,7 +1,6 @@
 use crate::accounts::{StateReadExt as _, StateWriteExt as _};
 use crate::config::Config;
 use crate::execution_service;
-use crate::generated::protocol::transaction::v1::Transaction;
 use crate::rollup::state_ext::StateWriteExt as RollupStateExt;
 use crate::snapshot::Snapshot;
 use crate::text::{StateReadExt as _, StateWriteExt as _};
@@ -17,6 +16,7 @@ use bytes::Bytes;
 use cnidarium::Storage;
 use color_eyre::eyre;
 use prost::Message;
+use rollup_core::generated::protocol::transaction::v1::Transaction;
 use tonic::transport::Server;
 use tower::ServiceBuilder;
 use tracing::info;
@@ -144,7 +144,7 @@ async fn handle_submit_transaction(
         raw_transaction
     );
     let transaction =
-        crate::transaction::v1::Transaction::try_from_raw(raw_transaction.clone()).unwrap();
+        rollup_core::transaction::v1::Transaction::try_from_raw(raw_transaction.clone()).unwrap();
     let rollup_id = RollupId::new([69_u8; 32]);
     composer_client
         .submit_rollup_transaction(SubmitRollupTransactionRequest {

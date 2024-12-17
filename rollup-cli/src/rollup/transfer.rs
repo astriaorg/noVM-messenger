@@ -1,6 +1,6 @@
 use astria_core::primitive::v1::{asset, Address};
-use chat_rollup::transaction::v1::{action::Transfer, Action};
 use color_eyre::eyre::{self, WrapErr as _};
+use rollup_core::transaction::v1::{action::Transfer, Action};
 
 use crate::utils::submit_transaction;
 

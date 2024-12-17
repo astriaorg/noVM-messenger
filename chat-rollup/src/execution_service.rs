@@ -1,4 +1,5 @@
 use crate::accounts::action::execute_transfer;
+use crate::rollup;
 use crate::rollup::state_ext::{StateReadExt, StateWriteExt};
 use crate::text::action::execute_send_text;
 use astria_core::execution::v1::Block;
@@ -113,23 +114,23 @@ impl ExecutionService for RollupExecutionService {
         // Process transactions
         for tx in transactions {
             let raw_transaction =
-                crate::generated::protocol::transaction::v1::Transaction::decode(tx.clone())
+                rollup_core::generated::protocol::transaction::v1::Transaction::decode(tx.clone())
                     .unwrap();
             info!("decoded transaction: {:?}", raw_transaction);
 
             let transaction =
-                crate::transaction::v1::Transaction::try_from_raw(raw_transaction).unwrap();
+                rollup_core::transaction::v1::Transaction::try_from_raw(raw_transaction).unwrap();
             let sender = transaction.verification_key().address_bytes();
             let actions = transaction.actions();
             for action in actions {
                 match action {
-                    crate::transaction::v1::Action::Transfer(transfer) => {
+                    rollup_core::transaction::v1::Action::Transfer(transfer) => {
                         info!("executing transfer: {:?}", transfer);
                         execute_transfer(&transfer, sender, &mut state_delta)
                             .await
                             .unwrap();
                     }
-                    crate::transaction::v1::Action::Text(send_text) => {
+                    rollup_core::transaction::v1::Action::Text(send_text) => {
                         info!("executing send_text: {:?}", send_text);
                         execute_send_text(&send_text, sender, &mut state_delta)
                             .await

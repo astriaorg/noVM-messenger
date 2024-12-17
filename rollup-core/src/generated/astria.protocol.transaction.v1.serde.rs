@@ -9,7 +9,8 @@ impl serde::Serialize for Action {
         if self.value.is_some() {
             len += 1;
         }
-        let mut struct_ser = serializer.serialize_struct("astria.protocol.transaction.v1.Action", len)?;
+        let mut struct_ser =
+            serializer.serialize_struct("astria.protocol.transaction.v1.Action", len)?;
         if let Some(v) = self.value.as_ref() {
             match v {
                 action::Value::Transfer(v) => {
@@ -29,10 +30,7 @@ impl<'de> serde::Deserialize<'de> for Action {
     where
         D: serde::Deserializer<'de>,
     {
-        const FIELDS: &[&str] = &[
-            "transfer",
-            "text",
-        ];
+        const FIELDS: &[&str] = &["transfer", "text"];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
@@ -49,7 +47,10 @@ impl<'de> serde::Deserialize<'de> for Action {
                 impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
                     type Value = GeneratedField;
 
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    fn expecting(
+                        &self,
+                        formatter: &mut std::fmt::Formatter<'_>,
+                    ) -> std::fmt::Result {
                         write!(formatter, "expected one of: {:?}", &FIELDS)
                     }
 
@@ -77,8 +78,8 @@ impl<'de> serde::Deserialize<'de> for Action {
             }
 
             fn visit_map<V>(self, mut map_: V) -> std::result::Result<Action, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
+            where
+                V: serde::de::MapAccess<'de>,
             {
                 let mut value__ = None;
                 while let Some(k) = map_.next_key()? {
@@ -87,24 +88,28 @@ impl<'de> serde::Deserialize<'de> for Action {
                             if value__.is_some() {
                                 return Err(serde::de::Error::duplicate_field("transfer"));
                             }
-                            value__ = map_.next_value::<::std::option::Option<_>>()?.map(action::Value::Transfer)
-;
+                            value__ = map_
+                                .next_value::<::std::option::Option<_>>()?
+                                .map(action::Value::Transfer);
                         }
                         GeneratedField::Text => {
                             if value__.is_some() {
                                 return Err(serde::de::Error::duplicate_field("text"));
                             }
-                            value__ = map_.next_value::<::std::option::Option<_>>()?.map(action::Value::Text)
-;
+                            value__ = map_
+                                .next_value::<::std::option::Option<_>>()?
+                                .map(action::Value::Text);
                         }
                     }
                 }
-                Ok(Action {
-                    value: value__,
-                })
+                Ok(Action { value: value__ })
             }
         }
-        deserializer.deserialize_struct("astria.protocol.transaction.v1.Action", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct(
+            "astria.protocol.transaction.v1.Action",
+            FIELDS,
+            GeneratedVisitor,
+        )
     }
 }
 impl serde::Serialize for SendText {
@@ -121,7 +126,8 @@ impl serde::Serialize for SendText {
         if !self.fee_asset.is_empty() {
             len += 1;
         }
-        let mut struct_ser = serializer.serialize_struct("astria.protocol.transaction.v1.SendText", len)?;
+        let mut struct_ser =
+            serializer.serialize_struct("astria.protocol.transaction.v1.SendText", len)?;
         if !self.text.is_empty() {
             struct_ser.serialize_field("text", &self.text)?;
         }
@@ -137,11 +143,7 @@ impl<'de> serde::Deserialize<'de> for SendText {
     where
         D: serde::Deserializer<'de>,
     {
-        const FIELDS: &[&str] = &[
-            "text",
-            "fee_asset",
-            "feeAsset",
-        ];
+        const FIELDS: &[&str] = &["text", "fee_asset", "feeAsset"];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
@@ -158,7 +160,10 @@ impl<'de> serde::Deserialize<'de> for SendText {
                 impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
                     type Value = GeneratedField;
 
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    fn expecting(
+                        &self,
+                        formatter: &mut std::fmt::Formatter<'_>,
+                    ) -> std::fmt::Result {
                         write!(formatter, "expected one of: {:?}", &FIELDS)
                     }
 
@@ -186,8 +191,8 @@ impl<'de> serde::Deserialize<'de> for SendText {
             }
 
             fn visit_map<V>(self, mut map_: V) -> std::result::Result<SendText, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
+            where
+                V: serde::de::MapAccess<'de>,
             {
                 let mut text__ = None;
                 let mut fee_asset__ = None;
@@ -213,7 +218,11 @@ impl<'de> serde::Deserialize<'de> for SendText {
                 })
             }
         }
-        deserializer.deserialize_struct("astria.protocol.transaction.v1.SendText", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct(
+            "astria.protocol.transaction.v1.SendText",
+            FIELDS,
+            GeneratedVisitor,
+        )
     }
 }
 impl serde::Serialize for Transaction {
@@ -233,14 +242,21 @@ impl serde::Serialize for Transaction {
         if self.body.is_some() {
             len += 1;
         }
-        let mut struct_ser = serializer.serialize_struct("astria.protocol.transaction.v1.Transaction", len)?;
+        let mut struct_ser =
+            serializer.serialize_struct("astria.protocol.transaction.v1.Transaction", len)?;
         if !self.signature.is_empty() {
             #[allow(clippy::needless_borrow)]
-            struct_ser.serialize_field("signature", pbjson::private::base64::encode(&self.signature).as_str())?;
+            struct_ser.serialize_field(
+                "signature",
+                pbjson::private::base64::encode(&self.signature).as_str(),
+            )?;
         }
         if !self.public_key.is_empty() {
             #[allow(clippy::needless_borrow)]
-            struct_ser.serialize_field("publicKey", pbjson::private::base64::encode(&self.public_key).as_str())?;
+            struct_ser.serialize_field(
+                "publicKey",
+                pbjson::private::base64::encode(&self.public_key).as_str(),
+            )?;
         }
         if let Some(v) = self.body.as_ref() {
             struct_ser.serialize_field("body", v)?;
@@ -254,12 +270,7 @@ impl<'de> serde::Deserialize<'de> for Transaction {
     where
         D: serde::Deserializer<'de>,
     {
-        const FIELDS: &[&str] = &[
-            "signature",
-            "public_key",
-            "publicKey",
-            "body",
-        ];
+        const FIELDS: &[&str] = &["signature", "public_key", "publicKey", "body"];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
@@ -277,7 +288,10 @@ impl<'de> serde::Deserialize<'de> for Transaction {
                 impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
                     type Value = GeneratedField;
 
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    fn expecting(
+                        &self,
+                        formatter: &mut std::fmt::Formatter<'_>,
+                    ) -> std::fmt::Result {
                         write!(formatter, "expected one of: {:?}", &FIELDS)
                     }
 
@@ -306,8 +320,8 @@ impl<'de> serde::Deserialize<'de> for Transaction {
             }
 
             fn visit_map<V>(self, mut map_: V) -> std::result::Result<Transaction, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
+            where
+                V: serde::de::MapAccess<'de>,
             {
                 let mut signature__ = None;
                 let mut public_key__ = None;
@@ -318,17 +332,19 @@ impl<'de> serde::Deserialize<'de> for Transaction {
                             if signature__.is_some() {
                                 return Err(serde::de::Error::duplicate_field("signature"));
                             }
-                            signature__ = 
-                                Some(map_.next_value::<::pbjson::private::BytesDeserialize<_>>()?.0)
-                            ;
+                            signature__ = Some(
+                                map_.next_value::<::pbjson::private::BytesDeserialize<_>>()?
+                                    .0,
+                            );
                         }
                         GeneratedField::PublicKey => {
                             if public_key__.is_some() {
                                 return Err(serde::de::Error::duplicate_field("publicKey"));
                             }
-                            public_key__ = 
-                                Some(map_.next_value::<::pbjson::private::BytesDeserialize<_>>()?.0)
-                            ;
+                            public_key__ = Some(
+                                map_.next_value::<::pbjson::private::BytesDeserialize<_>>()?
+                                    .0,
+                            );
                         }
                         GeneratedField::Body => {
                             if body__.is_some() {
@@ -345,7 +361,11 @@ impl<'de> serde::Deserialize<'de> for Transaction {
                 })
             }
         }
-        deserializer.deserialize_struct("astria.protocol.transaction.v1.Transaction", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct(
+            "astria.protocol.transaction.v1.Transaction",
+            FIELDS,
+            GeneratedVisitor,
+        )
     }
 }
 impl serde::Serialize for TransactionBody {
@@ -362,7 +382,8 @@ impl serde::Serialize for TransactionBody {
         if !self.actions.is_empty() {
             len += 1;
         }
-        let mut struct_ser = serializer.serialize_struct("astria.protocol.transaction.v1.TransactionBody", len)?;
+        let mut struct_ser =
+            serializer.serialize_struct("astria.protocol.transaction.v1.TransactionBody", len)?;
         if let Some(v) = self.params.as_ref() {
             struct_ser.serialize_field("params", v)?;
         }
@@ -378,10 +399,7 @@ impl<'de> serde::Deserialize<'de> for TransactionBody {
     where
         D: serde::Deserializer<'de>,
     {
-        const FIELDS: &[&str] = &[
-            "params",
-            "actions",
-        ];
+        const FIELDS: &[&str] = &["params", "actions"];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
@@ -398,7 +416,10 @@ impl<'de> serde::Deserialize<'de> for TransactionBody {
                 impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
                     type Value = GeneratedField;
 
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    fn expecting(
+                        &self,
+                        formatter: &mut std::fmt::Formatter<'_>,
+                    ) -> std::fmt::Result {
                         write!(formatter, "expected one of: {:?}", &FIELDS)
                     }
 
@@ -426,8 +447,8 @@ impl<'de> serde::Deserialize<'de> for TransactionBody {
             }
 
             fn visit_map<V>(self, mut map_: V) -> std::result::Result<TransactionBody, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
+            where
+                V: serde::de::MapAccess<'de>,
             {
                 let mut params__ = None;
                 let mut actions__ = None;
@@ -453,7 +474,11 @@ impl<'de> serde::Deserialize<'de> for TransactionBody {
                 })
             }
         }
-        deserializer.deserialize_struct("astria.protocol.transaction.v1.TransactionBody", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct(
+            "astria.protocol.transaction.v1.TransactionBody",
+            FIELDS,
+            GeneratedVisitor,
+        )
     }
 }
 impl serde::Serialize for TransactionParams {
@@ -470,7 +495,8 @@ impl serde::Serialize for TransactionParams {
         if !self.chain_id.is_empty() {
             len += 1;
         }
-        let mut struct_ser = serializer.serialize_struct("astria.protocol.transaction.v1.TransactionParams", len)?;
+        let mut struct_ser =
+            serializer.serialize_struct("astria.protocol.transaction.v1.TransactionParams", len)?;
         if self.nonce != 0 {
             struct_ser.serialize_field("nonce", &self.nonce)?;
         }
@@ -486,11 +512,7 @@ impl<'de> serde::Deserialize<'de> for TransactionParams {
     where
         D: serde::Deserializer<'de>,
     {
-        const FIELDS: &[&str] = &[
-            "nonce",
-            "chain_id",
-            "chainId",
-        ];
+        const FIELDS: &[&str] = &["nonce", "chain_id", "chainId"];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
@@ -507,7 +529,10 @@ impl<'de> serde::Deserialize<'de> for TransactionParams {
                 impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
                     type Value = GeneratedField;
 
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    fn expecting(
+                        &self,
+                        formatter: &mut std::fmt::Formatter<'_>,
+                    ) -> std::fmt::Result {
                         write!(formatter, "expected one of: {:?}", &FIELDS)
                     }
 
@@ -535,8 +560,8 @@ impl<'de> serde::Deserialize<'de> for TransactionParams {
             }
 
             fn visit_map<V>(self, mut map_: V) -> std::result::Result<TransactionParams, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
+            where
+                V: serde::de::MapAccess<'de>,
             {
                 let mut nonce__ = None;
                 let mut chain_id__ = None;
@@ -546,9 +571,10 @@ impl<'de> serde::Deserialize<'de> for TransactionParams {
                             if nonce__.is_some() {
                                 return Err(serde::de::Error::duplicate_field("nonce"));
                             }
-                            nonce__ = 
-                                Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
-                            ;
+                            nonce__ = Some(
+                                map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?
+                                    .0,
+                            );
                         }
                         GeneratedField::ChainId => {
                             if chain_id__.is_some() {
@@ -564,7 +590,11 @@ impl<'de> serde::Deserialize<'de> for TransactionParams {
                 })
             }
         }
-        deserializer.deserialize_struct("astria.protocol.transaction.v1.TransactionParams", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct(
+            "astria.protocol.transaction.v1.TransactionParams",
+            FIELDS,
+            GeneratedVisitor,
+        )
     }
 }
 impl serde::Serialize for Transfer {
@@ -587,7 +617,8 @@ impl serde::Serialize for Transfer {
         if !self.fee_asset.is_empty() {
             len += 1;
         }
-        let mut struct_ser = serializer.serialize_struct("astria.protocol.transaction.v1.Transfer", len)?;
+        let mut struct_ser =
+            serializer.serialize_struct("astria.protocol.transaction.v1.Transfer", len)?;
         if let Some(v) = self.to.as_ref() {
             struct_ser.serialize_field("to", v)?;
         }
@@ -609,13 +640,7 @@ impl<'de> serde::Deserialize<'de> for Transfer {
     where
         D: serde::Deserializer<'de>,
     {
-        const FIELDS: &[&str] = &[
-            "to",
-            "amount",
-            "asset",
-            "fee_asset",
-            "feeAsset",
-        ];
+        const FIELDS: &[&str] = &["to", "amount", "asset", "fee_asset", "feeAsset"];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
@@ -634,7 +659,10 @@ impl<'de> serde::Deserialize<'de> for Transfer {
                 impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
                     type Value = GeneratedField;
 
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    fn expecting(
+                        &self,
+                        formatter: &mut std::fmt::Formatter<'_>,
+                    ) -> std::fmt::Result {
                         write!(formatter, "expected one of: {:?}", &FIELDS)
                     }
 
@@ -664,8 +692,8 @@ impl<'de> serde::Deserialize<'de> for Transfer {
             }
 
             fn visit_map<V>(self, mut map_: V) -> std::result::Result<Transfer, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
+            where
+                V: serde::de::MapAccess<'de>,
             {
                 let mut to__ = None;
                 let mut amount__ = None;
@@ -707,6 +735,10 @@ impl<'de> serde::Deserialize<'de> for Transfer {
                 })
             }
         }
-        deserializer.deserialize_struct("astria.protocol.transaction.v1.Transfer", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct(
+            "astria.protocol.transaction.v1.Transfer",
+            FIELDS,
+            GeneratedVisitor,
+        )
     }
 }

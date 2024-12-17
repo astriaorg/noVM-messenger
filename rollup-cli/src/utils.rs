@@ -1,12 +1,12 @@
 use astria_core::crypto::SigningKey;
 use astria_core::primitive::v1::Address;
 use astria_core::Protobuf;
-use chat_rollup::transaction::v1::{Action, TransactionBody};
+use rollup_core::transaction::v1::{Action, TransactionBody};
 
-use chat_rollup::generated::protocol::transaction::v1::Transaction;
 use color_eyre::eyre::{self, eyre, WrapErr as _};
 use prost::Message;
 use reqwest::Response;
+use rollup_core::generated::protocol::transaction::v1::Transaction;
 
 pub(crate) async fn submit_transaction(
     rollup_url: &str,

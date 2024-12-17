@@ -37,7 +37,7 @@ use crate::{
 // }
 
 pub(crate) async fn execute_transfer<S, TAddress>(
-    action: &crate::transaction::v1::action::Transfer,
+    action: &rollup_core::transaction::v1::action::Transfer,
     from: &TAddress,
     mut state: S,
 ) -> Result<()>

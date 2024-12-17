@@ -1,5 +1,7 @@
 [workspace]
 members = [
     "chat-rollup",
-    "rollup-cli"
-]
+    "rollup-cli", 
+    "rollup-core",
+    "tools/protobuf-compiler",
+    ]

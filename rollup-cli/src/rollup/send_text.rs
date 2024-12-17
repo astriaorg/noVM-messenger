@@ -1,5 +1,5 @@
 use astria_core::primitive::v1::asset;
-use chat_rollup::transaction::v1::{action::SendText, Action};
+use rollup_core::transaction::v1::{action::SendText, Action};
 
 use color_eyre::eyre::{self, WrapErr as _};
 

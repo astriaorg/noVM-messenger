@@ -4,12 +4,10 @@ pub mod address;
 pub mod assets;
 pub mod config;
 pub mod execution_service;
-pub mod generated;
 pub mod rollup;
 pub mod snapshot;
 pub mod storage;
 pub mod text;
-pub mod transaction;
 
 use astria_eyre::eyre::{Result, WrapErr as _};
 use astria_sequencer::BUILD_INFO;

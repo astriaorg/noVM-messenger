@@ -412,7 +412,7 @@ dependencies = [
  "hex",
  "ibc-types",
  "indexmap 2.7.0",
- "pbjson",
+ "pbjson 0.6.0",
  "pbjson-types",
  "penumbra-ibc 0.80.9",
  "penumbra-proto 0.80.9",
@@ -1141,6 +1141,7 @@ dependencies = [
  "pin-project-lite",
  "prost 0.12.6",
  "rand",
+ "rollup-core",
  "serde",
  "serde_json",
  "sha2 0.10.8",
@@ -1150,7 +1151,7 @@ dependencies = [
  "thiserror 2.0.7",
  "tokio",
  "tonic 0.10.2",
- "tonic-build",
+ "tonic-build 0.12.3",
  "tower 0.5.2",
  "tower-abci",
  "tower-http",
@@ -2323,6 +2324,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
 dependencies = [
  "digest 0.10.7",
+]
+
+[[package]]
+name = "home"
+version = "0.5.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "589533453244b0995c858700322199b2becb13b627df2851f64a2775d024abcf"
+dependencies = [
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -3897,6 +3907,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "pbjson"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c7e6349fa080353f4a597daffd05cb81572a9c031a6d4fff7e504947496fcc68"
+dependencies = [
+ "base64 0.21.7",
+ "serde",
+]
+
+[[package]]
 name = "pbjson-build"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3916,7 +3936,7 @@ checksum = "18f596653ba4ac51bdecbb4ef6773bc7f56042dc13927910de1684ad3d32aa12"
 dependencies = [
  "bytes",
  "chrono",
- "pbjson",
+ "pbjson 0.6.0",
  "pbjson-build",
  "prost 0.12.6",
  "prost-build 0.12.6",
@@ -4315,7 +4335,7 @@ dependencies = [
  "ibc-proto",
  "ibc-types",
  "ics23",
- "pbjson",
+ "pbjson 0.6.0",
  "pbjson-types",
  "pin-project",
  "prost 0.12.6",
@@ -4343,7 +4363,7 @@ dependencies = [
  "ibc-proto",
  "ibc-types",
  "ics23",
- "pbjson",
+ "pbjson 0.6.0",
  "pbjson-types",
  "pin-project",
  "prost 0.12.6",
@@ -5184,10 +5204,37 @@ dependencies = [
  "pbjson-types",
  "prost 0.12.6",
  "reqwest 0.12.9",
+ "rollup-core",
  "serde",
  "serde_json",
  "tokio",
  "tracing-subscriber 0.3.19",
+]
+
+[[package]]
+name = "rollup-core"
+version = "0.1.0"
+dependencies = [
+ "astria-core",
+ "bytes",
+ "pbjson 0.7.0",
+ "pbjson-types",
+ "prost 0.12.6",
+ "serde",
+ "sha2 0.10.8",
+ "thiserror 2.0.7",
+]
+
+[[package]]
+name = "rollup-protobuf-compiler"
+version = "0.1.0"
+dependencies = [
+ "pbjson-build",
+ "prost-build 0.12.6",
+ "tempfile",
+ "tonic-build 0.10.2",
+ "walkdir",
+ "which",
 ]
 
 [[package]]
@@ -6297,6 +6344,19 @@ dependencies = [
 
 [[package]]
 name = "tonic-build"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d021fc044c18582b9a2408cd0dd05b1596e3ecdb5c4df822bb0183545683889"
+dependencies = [
+ "prettyplease",
+ "proc-macro2 1.0.92",
+ "prost-build 0.12.6",
+ "quote",
+ "syn 2.0.90",
+]
+
+[[package]]
+name = "tonic-build"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9557ce109ea773b399c9b9e5dca39294110b74f1f342cb347a80d1fce8c26a11"
@@ -6881,6 +6941,19 @@ checksum = "5a6580f308b1fad9207618087a65c04e7a10bc77e02c8e84e9b00dd4b12fa0bb"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "which"
+version = "5.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9bf3ea8596f3a0dd5980b46430f2058dfe2c36a27ccfbb1845d6fbfcd9ba6e14"
+dependencies = [
+ "either",
+ "home",
+ "once_cell",
+ "rustix",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]

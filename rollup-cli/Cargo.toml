@@ -25,3 +25,4 @@ clap-stdin = "0.5.1"
 chat_rollup = { package = "chat-rollup", path = "../chat-rollup"}
 serde = { version = "1.0.216", features = ["derive"] }
 base64-serde = "0.8.0"
+rollup_core = { package = "rollup-core", path = "../rollup-core" }
