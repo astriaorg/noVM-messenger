@@ -1,0 +1,5 @@
+version: v1
+name: astria/quasystaty/chat
+deps:
+  - buf.build/astria/protocol-apis
+  - buf.build/astria/primitives
