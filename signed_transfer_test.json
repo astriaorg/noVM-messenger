@@ -1,8 +1,0 @@
-{
-    "signature": "RFT7WWS+BxPKrgq4fcXiID3rPzF8r40sQJGRk5ur44K7wu6TvKXkvXCNRLjhDkUFaL/vrldBPVuW53Qrwtk1Bg==",
-    "publicKey": "1b9KP8znF7A4i8wnSevBSK2ZabI/Re4bYF/Vh3hXasQ=",
-    "body": {
-        "typeUrl": "/astria.protocol.transaction.v1.TransactionBody",
-        "value": "ChgSFnNlcXVlbmNlci10ZXN0LWNoYWluLTASSwpJCi8SLWFzdHJpYTF4bmx2ZzBybGUydTZhdWFuZTc5dDRwMjdnOGh4bmozNmphOTYwehIKCICAkLu61q3wDRoEbnJpYSIEbnJpYQ=="
-    }
-}
