@@ -3,7 +3,6 @@ syntax = "proto3";
 package transaction.v1;
 
 import "astria/primitive/v1/types.proto";
-import "astria/protocol/fees/v1/types.proto";
 
 message Action {
   oneof value {
@@ -31,5 +30,6 @@ message Transfer {
 // be considered invalid by the sequencer.
 message SendText {
   string text = 1;
-  string fee_asset = 2;
+  string from = 2;
+  string fee_asset = 3;
 }

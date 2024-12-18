@@ -32,9 +32,8 @@ use crate::text::{StateReadExt as _, StateWriteExt as _};
 //     }
 // }
 
-pub(crate) async fn execute_send_text<S, String>(
+pub(crate) async fn execute_send_text<S>(
     action: &rollup_core::transaction::v1::action::SendText,
-    from: &String,
     mut state: S,
 ) -> Result<()>
 where
@@ -42,7 +41,9 @@ where
 {
     let last_id = state.get_last_text_id().await.unwrap();
     let last_id: u64 = last_id.into();
-    state.put_text(action.text.clone(), last_id + 1).unwrap();
+    state
+        .put_text(action.text.clone(), action.from.clone(), last_id + 1)
+        .unwrap();
     state.put_last_text_id(last_id + 1).unwrap();
 
     Ok(())

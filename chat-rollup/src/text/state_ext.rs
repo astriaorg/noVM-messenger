@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::format};
 
 use astria_core::primitive::v1::asset;
 use astria_eyre::{
@@ -57,8 +57,8 @@ impl<T: ?Sized + StateRead> StateReadExt for T {}
 #[async_trait]
 pub(crate) trait StateWriteExt: StateWrite {
     #[instrument(skip_all)]
-    fn put_text(&mut self, text: String, id: u64) -> Result<()> {
-        let bytes = StoredValue::from(storage::values::Text::from(text.as_str()))
+    fn put_text(&mut self, text: String, from: String, id: u64) -> Result<()> {
+        let bytes = StoredValue::from(storage::values::Text::from(format!("{from}:{text}")))
             .serialize()
             .context("failed to serialize text")?;
         self.put_raw(keys::text(id).to_string(), bytes);

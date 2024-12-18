@@ -60,7 +60,13 @@ fn main() {
         .build_client(true)
         .build_server(true)
         .emit_rerun_if_changed(false)
-        .bytes([".astria", ".celestia", ".cosmos", ".tendermint"])
+        .bytes([
+            ".transaction",
+            ".astria",
+            ".celestia",
+            ".cosmos",
+            ".tendermint",
+        ])
         .client_mod_attribute(".", "#[cfg(feature=\"client\")]")
         .server_mod_attribute(".", "#[cfg(feature=\"server\")]")
         .extern_path(".astria_vendored.penumbra", "::penumbra-proto")
@@ -87,6 +93,7 @@ fn main() {
         .unwrap()
         .out_dir(&out_dir)
         .build(&[
+            ".transaction",
             ".astria",
             ".astria_vendored",
             ".celestia",
@@ -125,13 +132,7 @@ fn clean_non_astria_code(generated: &mut ContentMap) {
     let mut foreign_file_names: HashSet<_> = generated
         .files
         .keys()
-        .filter(|name| {
-            !name.starts_with("astria.")
-                && !name.starts_with("astria_vendored.")
-                && !name.starts_with("celestia.")
-                && !name.starts_with("cosmos.")
-                && !name.starts_with("tendermint.")
-        })
+        .filter(|name| !name.starts_with("transaction"))
         .cloned()
         .collect();
     // also mask mod.rs because we need are defining it

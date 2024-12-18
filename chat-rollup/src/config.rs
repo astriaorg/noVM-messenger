@@ -14,7 +14,7 @@ pub struct Config {
     /// metrics
     pub no_metrics: bool,
     /// The gRPC endpoint
-    pub grpc_addr: String,
+    pub execution_grpc_addr: String,
     /// Forces writing trace data to stdout no matter if connected to a tty or not.
     pub force_stdout: bool,
     /// Writes a human readable format to stdout instead of JSON formatted OTEL trace data.
