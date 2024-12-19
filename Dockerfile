@@ -18,10 +18,10 @@ RUN cargo build --release
 FROM debian:bookworm-slim
 
 # Copy the compiled binary from the builder stage
-COPY --from=builder /app/target/release/uprollup /usr/local/bin/up
+COPY --from=builder /app/target/release/chat-rollup /usr/local/bin/chat-rollup
 
 # Expose the gRPC port
 EXPOSE 50051
 
 # Set the binary as the container entry point
-ENTRYPOINT ["/usr/local/bin/up"]
+ENTRYPOINT ["/usr/local/bin/chat-rollup"]

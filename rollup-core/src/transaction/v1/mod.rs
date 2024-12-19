@@ -4,7 +4,7 @@ use prost::{Message as _, Name as _};
 use crate::generated::protocol::transaction::v1 as raw;
 use astria_core::{
     crypto::{self, Signature, SigningKey, VerificationKey},
-    primitive::v1::{asset::Denom, Address, TransactionId, ADDRESS_LEN},
+    primitive::v1::{TransactionId, ADDRESS_LEN},
     Protobuf,
 };
 
@@ -516,6 +516,7 @@ impl TransactionParams {
 mod tests {
     use super::*;
     use crate::transaction::v1::action::Transfer;
+    use astria_core::primitive::v1::{asset::Denom, Address};
     const ASTRIA_ADDRESS_PREFIX: &str = "astria";
 
     fn asset() -> Denom {

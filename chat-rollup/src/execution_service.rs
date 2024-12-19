@@ -132,7 +132,7 @@ impl ExecutionService for RollupExecutionService {
                     }
                     rollup_core::transaction::v1::Action::Text(send_text) => {
                         info!("executing send_text: {:?}", send_text);
-                        execute_send_text(&send_text, sender, &mut state_delta)
+                        execute_send_text(&send_text, &mut state_delta)
                             .await
                             .unwrap();
                     }

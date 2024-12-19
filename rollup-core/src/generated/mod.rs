@@ -16,11 +16,11 @@ pub mod protocol {
     #[path = ""]
     pub mod transaction {
         pub mod v1 {
-            include!("astria.protocol.transaction.v1.rs");
+            include!("transaction.v1.rs");
 
             mod _serde_impl {
                 use super::*;
-                include!("astria.protocol.transaction.v1.serde.rs");
+                include!("transaction.v1.serde.rs");
             }
         }
     }

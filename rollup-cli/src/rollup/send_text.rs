@@ -9,6 +9,8 @@ use crate::utils::submit_transaction;
 pub(super) struct Command {
     /// The text message sent
     text: String,
+    // The sender nickname
+    from: String,
     /// The bech32m prefix that will be used for constructing addresses using the private key
     #[arg(long, default_value = "astria")]
     prefix: String,
@@ -47,6 +49,7 @@ impl Command {
             self.private_key.as_str(),
             Action::Text(SendText {
                 text: self.text.clone(),
+                from: self.from.clone(),
                 fee_asset: self.fee_asset,
             }),
         )

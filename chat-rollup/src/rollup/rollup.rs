@@ -26,7 +26,7 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 impl Rollup {
     pub async fn run_until_stopped(cfg: Config) -> eyre::Result<()> {
-        let addr: SocketAddr = cfg.grpc_addr.parse()?;
+        let addr: SocketAddr = cfg.execution_grpc_addr.parse()?;
         let composer_addr = cfg.composer_addr;
         let composer_client = GrpcCollectorServiceClient::connect(composer_addr.clone())
             .await
@@ -89,7 +89,7 @@ impl Rollup {
             .unwrap();
 
         delta.put_block(block, 0).unwrap();
-        delta.put_text(text, 0).unwrap();
+        delta.put_text(text, "ido".to_string(), 0).unwrap();
         delta.put_last_text_id(0).unwrap();
         delta.put_commitment_state(0, 0, 2).unwrap();
         let write = storage
@@ -172,7 +172,7 @@ async fn handle_get_account_balance(
         .await
         .unwrap();
     let response = account_balance.to_string();
-    return Ok(warp::reply::json(&response));
+    Ok(warp::reply::json(&response))
 
     // Err(_) => Err(warp::reject::not_found()),
 }
@@ -185,5 +185,5 @@ async fn handle_get_text_from_id(
     let delta = cnidarium::StateDelta::new(snapshot);
     let text = delta.get_text(id).await.unwrap();
     let response = String::from(text);
-    return Ok(warp::reply::json(&response));
+    Ok(warp::reply::json(&response))
 }

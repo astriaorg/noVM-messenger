@@ -20,19 +20,19 @@ tokio = { version = "1", features = ["full"] }
 color-eyre = "0.6"
 penumbra-ibc = { git = "https://github.com/penumbra-zone/penumbra.git", tag = "v0.80.7", default-features = false }
 astria-core = { git = "https://github.com/astriaorg/astria.git", package = "astria-core", features = [
-    "server",
-    "serde",
-    "client",
-    "unchecked-constructors",
-    "test-utils",
+  "server",
+  "serde",
+  "client",
+  "unchecked-constructors",
+  "test-utils",
 
 ] }
 tower-abci = "0.12.0"
 astria-eyre = { git = "https://github.com/astriaorg/astria.git", package = "astria-eyre", features = [
-    "anyhow",
+  "anyhow",
 ] }
 astria-sequencer-client = { git = "https://github.com/astriaorg/astria.git", package = "astria-sequencer-client", features = [
-    "http",
+  "http",
 ] }
 astria-telemetry = { git = "https://github.com/astriaorg/astria.git", package = "astria-telemetry", features = [
   "display",
@@ -46,7 +46,7 @@ tracing-subscriber = { version = "0.3.17", features = [
 astria-sequencer = { git = "https://github.com/astriaorg/astria.git", package = "astria-sequencer" }
 futures = "0.3"
 bytes = "1.8.0"
-pbjson-types = { version = "0.6.0"}
+pbjson-types = { version = "0.6.0" }
 tower = { version = "0.5.1", features = ["full"] }
 tower-http = { version = "0.4", features = ["cors"] }
 async-trait = "0.1.83"

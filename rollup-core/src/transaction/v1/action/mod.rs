@@ -4,7 +4,7 @@ use astria_core::primitive::v1::{
     asset::{self},
     Address, AddressError,
 };
-use astria_core::{protocol::account, Protobuf};
+use astria_core::Protobuf;
 
 #[derive(Clone, Debug)]
 #[cfg_attr(
@@ -26,7 +26,7 @@ impl Protobuf for Action {
         use raw::action::Value;
         let kind = match self {
             Action::Transfer(act) => Value::Transfer(act.to_raw()),
-            Action::Text(act) => Value::Text(act.to_raw()),
+            Action::Text(act) => Value::SendText(act.to_raw()),
         };
         raw::Action { value: Some(kind) }
     }
@@ -57,7 +57,7 @@ impl Protobuf for Action {
             Value::Transfer(act) => {
                 Self::Transfer(Transfer::try_from_raw(act).map_err(Error::transfer)?)
             }
-            Value::Text(account) => {
+            Value::SendText(account) => {
                 Self::Text(SendText::try_from_raw(account).map_err(Error::send_text)?)
             }
         };
@@ -148,6 +148,7 @@ enum ActionErrorKind {
 #[derive(Clone, Debug)]
 pub struct SendText {
     pub text: String,
+    pub from: String,
     pub fee_asset: asset::Denom,
 }
 
@@ -157,9 +158,14 @@ impl Protobuf for SendText {
 
     #[must_use]
     fn to_raw(&self) -> raw::SendText {
-        let Self { text, fee_asset } = &self;
+        let Self {
+            text,
+            from,
+            fee_asset,
+        } = &self;
         raw::SendText {
             text: text.clone(),
+            from: from.to_string(),
             fee_asset: fee_asset.to_string(),
         }
     }
@@ -169,10 +175,19 @@ impl Protobuf for SendText {
     /// # Errors
     /// Returns `TextError` if the raw action's `to` address did not have the expected length.
     fn try_from_raw_ref(raw: &Self::Raw) -> Result<Self, Self::Error> {
-        let raw::SendText { text, fee_asset } = raw;
+        let raw::SendText {
+            text,
+            from,
+            fee_asset,
+        } = raw;
+        let from = from.to_string();
         let text = text.to_string();
         let fee_asset = fee_asset.parse().map_err(SendTextError::fee_asset)?;
-        Ok(Self { text, fee_asset })
+        Ok(Self {
+            text,
+            from,
+            fee_asset,
+        })
     }
 }
 
