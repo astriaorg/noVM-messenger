@@ -73,6 +73,7 @@ pub(crate) trait StateReadExt: StateRead {
 
 impl<T: ?Sized + StateRead> StateReadExt for T {}
 
+#[allow(dead_code)]
 #[async_trait]
 pub(crate) trait StateWriteExt: StateWrite {
     #[instrument(skip_all)]

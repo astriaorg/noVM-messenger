@@ -11,7 +11,7 @@ pub mod text;
 
 use astria_eyre::eyre::{Result, WrapErr as _};
 use astria_sequencer::BUILD_INFO;
-use rollup::rollup::Rollup;
+use rollup::Rollup;
 use tracing::info;
 
 #[tokio::main]

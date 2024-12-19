@@ -25,13 +25,13 @@ impl From<Balance> for u128 {
     }
 }
 
-impl<'a> From<Balance> for crate::storage::StoredValue<'a> {
+impl From<Balance> for crate::storage::StoredValue<'_> {
     fn from(balance: Balance) -> Self {
         crate::storage::StoredValue::Account(Value(ValueImpl::Balance(balance)))
     }
 }
 
-impl<'a> TryFrom<crate::storage::StoredValue<'a>> for Balance {
+impl TryFrom<crate::storage::StoredValue<'_>> for Balance {
     type Error = astria_eyre::eyre::Error;
 
     fn try_from(value: crate::storage::StoredValue) -> Result<Self, Self::Error> {
@@ -57,13 +57,13 @@ impl From<Nonce> for u32 {
     }
 }
 
-impl<'a> From<Nonce> for crate::storage::StoredValue<'a> {
+impl From<Nonce> for crate::storage::StoredValue<'_> {
     fn from(nonce: Nonce) -> Self {
         crate::storage::StoredValue::Account(Value(ValueImpl::Nonce(nonce)))
     }
 }
 
-impl<'a> TryFrom<crate::storage::StoredValue<'a>> for Nonce {
+impl TryFrom<crate::storage::StoredValue<'_>> for Nonce {
     type Error = astria_eyre::eyre::Error;
 
     fn try_from(value: crate::storage::StoredValue) -> Result<Self, Self::Error> {

@@ -28,6 +28,8 @@ use crate::{accounts::AddressBytes, storage::StoredValue};
 pub(crate) fn nria() -> TracePrefixed {
     "nria".parse().unwrap()
 }
+
+#[allow(dead_code)]
 pub(crate) fn astria_address(bytes: &[u8]) -> Address {
     let address: Address = Address::builder()
         .prefix("astria")
@@ -68,6 +70,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct AssetBalance {
     pub(crate) asset: asset::IbcPrefixed,

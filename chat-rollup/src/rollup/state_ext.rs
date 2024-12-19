@@ -40,7 +40,7 @@ pub(crate) trait StateReadExt: StateRead {
             bail!("block height not found state");
         };
         StoredValue::deserialize(&bytes)
-            .and_then(|value| Ok(storage::BlockHash::try_from(value).map(String::from)))
+            .map(|value| storage::BlockHash::try_from(value).map(String::from))
             .context("invalid block height bytes")
             .unwrap()
     }
@@ -62,7 +62,7 @@ pub(crate) trait StateReadExt: StateRead {
 
     async fn get_commitment_state(&self) -> Result<CommitmentStateHeight> {
         let Some(bytes) = self
-            .get_raw(&keys::COMMITMENT_STATE)
+            .get_raw(keys::COMMITMENT_STATE)
             .await
             .map_err(anyhow_to_eyre)
             .wrap_err("failed to read raw commitment state from state")?
@@ -70,7 +70,7 @@ pub(crate) trait StateReadExt: StateRead {
             bail!("commitment state not found state");
         };
         StoredValue::deserialize(&bytes)
-            .and_then(|value| storage::CommitmentState::try_from(value))
+            .and_then(storage::CommitmentState::try_from)
             .map(CommitmentStateHeight::from)
             .context("invalid commitment state bytes")
     }

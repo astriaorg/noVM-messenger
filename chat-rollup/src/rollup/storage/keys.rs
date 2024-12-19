@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 pub(in crate::rollup) const BLOCK: &str = "app/block";
 pub(in crate::rollup) const BLOCK_HASH: &str = "app/block_hash";
 pub(in crate::rollup) const BLOCK_HEIGHT: &str = "app/block_height";

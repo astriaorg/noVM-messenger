@@ -18,13 +18,13 @@ impl From<BlockHash> for String {
     }
 }
 
-impl<'a> From<BlockHash> for crate::storage::StoredValue<'a> {
+impl From<BlockHash> for crate::storage::StoredValue<'_> {
     fn from(block_hash: BlockHash) -> Self {
         crate::storage::StoredValue::Rollup(Value(ValueImpl::BlockHash(block_hash)))
     }
 }
 
-impl<'a> TryFrom<crate::storage::StoredValue<'a>> for BlockHash {
+impl TryFrom<crate::storage::StoredValue<'_>> for BlockHash {
     type Error = astria_eyre::eyre::Error;
 
     fn try_from(value: crate::storage::StoredValue) -> Result<Self, Self::Error> {

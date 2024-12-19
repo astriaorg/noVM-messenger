@@ -1,4 +1,6 @@
 use crate::accounts::action::execute_transfer;
+
+#[allow(unused_imports)]
 use crate::rollup;
 use crate::rollup::state_ext::{StateReadExt, StateWriteExt};
 use crate::text::action::execute_send_text;
@@ -97,13 +99,19 @@ impl ExecutionService for RollupExecutionService {
         let timestamp = request.timestamp.unwrap();
         let mut transactions: Vec<Bytes> = Vec::new();
         for rollup_data in request.transactions {
-            match rollup_data.value {
-                Some(value) => match value {
+            // match rollup_data.value {
+            //     Some(value) => match value {
+            //         SequencedData(data) => transactions.push(data),
+            //         Deposit(_) => {}
+            //     },
+            //     None => {}
+            // };
+            if let Some(value) = rollup_data.value {
+                match value {
                     SequencedData(data) => transactions.push(data),
                     Deposit(_) => {}
-                },
-                None => {}
-            };
+                }
+            }
         }
 
         let snapshot = self.storage.latest_snapshot();
@@ -126,13 +134,13 @@ impl ExecutionService for RollupExecutionService {
                 match action {
                     rollup_core::transaction::v1::Action::Transfer(transfer) => {
                         info!("executing transfer: {:?}", transfer);
-                        execute_transfer(&transfer, sender, &mut state_delta)
+                        execute_transfer(transfer, sender, &mut state_delta)
                             .await
                             .unwrap();
                     }
                     rollup_core::transaction::v1::Action::Text(send_text) => {
                         info!("executing send_text: {:?}", send_text);
-                        execute_send_text(&send_text, &mut state_delta)
+                        execute_send_text(send_text, &mut state_delta)
                             .await
                             .unwrap();
                     }
@@ -199,7 +207,7 @@ impl ExecutionService for RollupExecutionService {
         let firm_request = firm_block_request.number;
         let soft_block = state_delta.get_block(soft_request).await.unwrap();
         let firm_block = state_delta.get_block(firm_request).await.unwrap();
-        if soft_block.hash().to_owned() != soft_block_request.hash {
+        if *soft_block.hash() != soft_block_request.hash {
             println!(
                 "soft block hash does not match: current: {:?},  request: {:?}",
                 soft_block.hash().to_owned(),
@@ -207,7 +215,7 @@ impl ExecutionService for RollupExecutionService {
             );
             return Err(Status::invalid_argument("Soft block hash does not match"));
         }
-        if firm_block.hash().to_owned() != firm_block_request.hash {
+        if *firm_block.hash() != firm_block_request.hash {
             return Err(Status::invalid_argument("Firm block hash does not match"));
         }
         state_delta

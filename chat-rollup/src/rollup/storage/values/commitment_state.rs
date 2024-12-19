@@ -38,13 +38,13 @@ impl BorshDeserialize for CommitmentState {
     }
 }
 
-impl<'a> From<CommitmentState> for crate::storage::StoredValue<'a> {
+impl From<CommitmentState> for crate::storage::StoredValue<'_> {
     fn from(commitment: CommitmentState) -> Self {
         crate::storage::StoredValue::Rollup(Value(ValueImpl::CommitmentState(commitment)))
     }
 }
 
-impl<'a> TryFrom<crate::storage::StoredValue<'a>> for CommitmentState {
+impl TryFrom<crate::storage::StoredValue<'_>> for CommitmentState {
     type Error = astria_eyre::eyre::Error;
 
     fn try_from(value: crate::storage::StoredValue) -> Result<Self, Self::Error> {

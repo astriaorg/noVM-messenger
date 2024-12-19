@@ -1,7 +1,11 @@
 [workspace]
 members = [
-  "chat-rollup",
-  "rollup-cli",
-  "rollup-core",
-  "tools/protobuf-compiler",
+    "chat-rollup",
+    "rollup-cli",
+    "rollup-core",
+    "tools/protobuf-compiler",
 ]
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+prost = "0.12.6"

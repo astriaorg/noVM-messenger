@@ -12,9 +12,9 @@ astria-core = { git = "https://github.com/astriaorg/astria.git", package = "astr
   "test-utils",
 
 ] }
-serde = { version = "1.0", features = ["derive"] }
+serde = { workspace = true }
 
-prost = "0.12.6"
+prost = { workspace = true }
 pbjson-types = { version = "0.6.0" }
 pbjson = "0.6.0"
 bytes = "1.8.0"

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use super::raw;
 pub mod group;
 use astria_core::primitive::v1::{

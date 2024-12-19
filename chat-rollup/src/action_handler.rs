@@ -7,6 +7,7 @@ use cnidarium::StateWrite;
 /// these types due to Rust orphan rules.
 ///
 /// [1]: https://github.com/penumbra-zone/penumbra/blob/14959350abcb8cfbf33f9aedc7463fccfd8e3f9f/crates/cnidarium-component/src/action_handler.rs#L30
+#[allow(dead_code)]
 #[async_trait::async_trait]
 pub(crate) trait ActionHandler {
     // Commenting out for the time being as this is currently not being used. Leaving this in

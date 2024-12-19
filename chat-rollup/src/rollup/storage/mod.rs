@@ -4,6 +4,7 @@ mod values;
 pub(super) use values::Block;
 pub(super) use values::BlockHash;
 pub(super) use values::BlockHeight;
+#[allow(unused_imports)] // for BlockTimestamp
 pub(super) use values::BlockTimestamp;
 pub(super) use values::CommitmentState;
 pub(super) use values::CommitmentStateHeight;

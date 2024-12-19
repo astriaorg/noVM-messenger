@@ -10,10 +10,12 @@ use crate::{
 
 const COMPONENT_PREFIX: &str = "accounts/";
 const BALANCE_PREFIX: &str = "balance/";
+#[allow(dead_code)]
 const NONCE: &str = "nonce";
 
 /// Example: `accounts/gGhH....zZ4=/balance/`.
 ///                   |base64 chars|
+#[allow(dead_code)]
 pub(in crate::accounts) fn balance_prefix<TAddress: AddressBytes>(address: &TAddress) -> String {
     format!(
         "{}/{BALANCE_PREFIX}",
@@ -40,6 +42,7 @@ where
 
 /// Example: `accounts/gGhH....zZ4=/nonce`.
 ///                   |base64 chars|
+#[allow(dead_code)]
 pub(in crate::accounts) fn nonce<TAddress: AddressBytes>(address: &TAddress) -> String {
     format!(
         "{}/{NONCE}",

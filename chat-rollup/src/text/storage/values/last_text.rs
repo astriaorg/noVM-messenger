@@ -17,13 +17,13 @@ impl From<LastText> for u64 {
     }
 }
 
-impl<'a> From<LastText> for crate::storage::StoredValue<'a> {
+impl From<LastText> for crate::storage::StoredValue<'_> {
     fn from(id: LastText) -> Self {
         crate::storage::StoredValue::Text(Value(ValueImpl::LastText(id)))
     }
 }
 
-impl<'a> TryFrom<crate::storage::StoredValue<'a>> for LastText {
+impl TryFrom<crate::storage::StoredValue<'_>> for LastText {
     type Error = astria_eyre::eyre::Error;
 
     fn try_from(value: crate::storage::StoredValue) -> Result<Self, Self::Error> {

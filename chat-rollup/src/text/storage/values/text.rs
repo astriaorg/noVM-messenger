@@ -1,6 +1,6 @@
 use super::{Value, ValueImpl};
-use std::borrow::Cow;
 
+#[allow(unused_imports)]
 use astria_core::primitive::v1::asset::TracePrefixed as DomainTracePrefixed;
 use astria_eyre::eyre::bail;
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -26,13 +26,13 @@ impl From<Text> for String {
     }
 }
 
-impl<'a> From<Text> for crate::storage::StoredValue<'a> {
+impl From<Text> for crate::storage::StoredValue<'_> {
     fn from(text: Text) -> Self {
         crate::storage::StoredValue::Text(Value(ValueImpl::Text(text)))
     }
 }
 
-impl<'a> TryFrom<crate::storage::StoredValue<'a>> for Text {
+impl TryFrom<crate::storage::StoredValue<'_>> for Text {
     type Error = astria_eyre::eyre::Error;
 
     fn try_from(value: crate::storage::StoredValue) -> Result<Self, Self::Error> {

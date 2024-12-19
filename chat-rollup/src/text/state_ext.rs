@@ -1,5 +1,7 @@
+#[allow(unused_imports)]
 use std::{borrow::Cow, fmt::format};
 
+#[allow(unused_imports)]
 use astria_core::primitive::v1::asset;
 use astria_eyre::{
     anyhow_to_eyre,

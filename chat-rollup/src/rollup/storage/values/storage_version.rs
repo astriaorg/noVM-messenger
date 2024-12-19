@@ -18,13 +18,13 @@ impl From<StorageVersion> for u64 {
     }
 }
 
-impl<'a> From<StorageVersion> for crate::storage::StoredValue<'a> {
+impl From<StorageVersion> for crate::storage::StoredValue<'_> {
     fn from(storage_version: StorageVersion) -> Self {
         crate::storage::StoredValue::Rollup(Value(ValueImpl::StorageVersion(storage_version)))
     }
 }
 
-impl<'a> TryFrom<crate::storage::StoredValue<'a>> for StorageVersion {
+impl TryFrom<crate::storage::StoredValue<'_>> for StorageVersion {
     type Error = astria_eyre::eyre::Error;
 
     fn try_from(value: crate::storage::StoredValue) -> Result<Self, Self::Error> {

@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 use astria_eyre::eyre::{ensure, Result, WrapErr as _};
 use cnidarium::{StateRead, StateWrite};
 use rollup_core::transaction::v1::action::Transfer;

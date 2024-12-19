@@ -33,10 +33,7 @@ impl BorshDeserialize for BlockTimestamp {
     fn deserialize_reader<R: Read>(reader: &mut R) -> std::io::Result<Self> {
         let seconds = i64::deserialize_reader(reader)?;
         let nanos = i32::deserialize_reader(reader)?;
-        let timestamp = pbjson_types::Timestamp {
-            seconds: seconds,
-            nanos: nanos,
-        };
+        let timestamp = pbjson_types::Timestamp { seconds, nanos };
         Ok(BlockTimestamp(timestamp))
     }
 }

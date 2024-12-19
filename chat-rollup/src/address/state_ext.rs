@@ -10,6 +10,7 @@ use tracing::instrument;
 use super::storage::{self, keys};
 use crate::storage::StoredValue;
 
+#[allow(dead_code)]
 #[async_trait]
 pub(crate) trait StateReadExt: StateRead {
     async fn ensure_base_prefix(&self, address: &Address<Bech32m>) -> Result<()> {
@@ -70,6 +71,7 @@ pub(crate) trait StateReadExt: StateRead {
 
 impl<T: ?Sized + StateRead> StateReadExt for T {}
 
+#[allow(dead_code)]
 #[async_trait]
 pub(crate) trait StateWriteExt: StateWrite {
     #[instrument(skip_all)]

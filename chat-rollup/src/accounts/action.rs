@@ -3,6 +3,7 @@ use astria_eyre::eyre::{ensure, Result, WrapErr as _};
 use cnidarium::{StateRead, StateWrite};
 
 use super::AddressBytes;
+#[allow(unused_imports)]
 use crate::{
     accounts::{StateReadExt as _, StateWriteExt as _},
     address::{StateReadExt as _, StateReadExt as _},
@@ -58,6 +59,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 pub(crate) async fn check_transfer<S, TAddress>(
     action: &Transfer,
     from: &TAddress,

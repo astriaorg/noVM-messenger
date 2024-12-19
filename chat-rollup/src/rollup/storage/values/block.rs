@@ -52,13 +52,13 @@ impl BorshDeserialize for Block {
     }
 }
 
-impl<'a> From<Block> for crate::storage::StoredValue<'a> {
+impl From<Block> for crate::storage::StoredValue<'_> {
     fn from(block: Block) -> Self {
         crate::storage::StoredValue::Rollup(Value(ValueImpl::Block(block)))
     }
 }
 
-impl<'a> TryFrom<crate::storage::StoredValue<'a>> for Block {
+impl TryFrom<crate::storage::StoredValue<'_>> for Block {
     type Error = astria_eyre::eyre::Error;
 
     fn try_from(value: crate::storage::StoredValue) -> Result<Self, Self::Error> {
