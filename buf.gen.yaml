@@ -1,0 +1,4 @@
+version: v1
+managed:
+  enabled: true
+  repository: buf.build/astria
