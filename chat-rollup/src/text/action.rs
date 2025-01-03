@@ -43,7 +43,7 @@ where
     let last_id = state.get_last_text_id().await.unwrap();
     let last_id: u64 = last_id.into();
     state
-        .put_text(action.text.clone(), action.from.clone(), last_id + 1)
+        .put_text(action.text.clone(), action.from.clone(), last_id)
         .unwrap();
     state.put_last_text_id(last_id + 1).unwrap();
 
