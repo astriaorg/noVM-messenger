@@ -23,13 +23,37 @@ use rollup_core::generated::protocol::transaction::v1::Transaction;
 use rollup_core::transaction::v1::action::SendText;
 use rollup_core::transaction::v1::{Action, TransactionBody};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use state_ext::StateReadExt;
+use std::net::SocketAddr;
+use std::str::FromStr;
 use tonic::transport::Server;
 use tower::ServiceBuilder;
 use tracing::info;
 use warp::Filter;
+
+pub struct RollupConfig {
+    pub execution_grpc_addr: String,
+    pub composer_addr: String,
+    pub rollup_name: String,
+    pub sequencer_genesis_block_height: u32,
+    pub celestia_genesis_block_height: u32,
+    pub celestia_block_variance: u64,
+}
+
+impl RollupConfig {
+    pub fn new(config: Config) -> Self {
+        Self {
+            execution_grpc_addr: config.execution_grpc_addr,
+            composer_addr: config.composer_addr,
+            rollup_name: config.rollup_name,
+            sequencer_genesis_block_height: config.sequencer_genesis_block_height,
+            celestia_genesis_block_height: config.celestia_genesis_block_height,
+            celestia_block_variance: config.celestia_block_variance,
+        }
+    }
+}
 pub struct Rollup;
-use std::net::SocketAddr;
-use std::str::FromStr;
 
 const CHAIN_ID: &str = "astria";
 const FEE_ASSET: &str = "nria";
@@ -46,7 +70,10 @@ pub struct SendMessageRequest {
 impl Rollup {
     pub async fn run_until_stopped(cfg: Config) -> eyre::Result<()> {
         let addr: SocketAddr = cfg.execution_grpc_addr.parse()?;
-        let composer_addr = cfg.composer_addr;
+        let composer_addr = cfg.composer_addr.clone();
+        let rollup_id = RollupId::from_unhashed_bytes(Sha256::digest(cfg.rollup_name.as_bytes()));
+        let warp_rollup_id = warp::any().map(move || rollup_id.clone());
+
         let composer_client = GrpcCollectorServiceClient::connect(composer_addr.clone())
             .await
             .wrap_err("failed to connect to composer")?;
@@ -60,6 +87,7 @@ impl Rollup {
             .and(warp::post())
             .and(with_composer(composer_client.clone()))
             .and(warp::body::bytes())
+            .and(warp_rollup_id)
             .and_then(handle_submit_transaction);
 
         let submit_unsigned_message = warp::path!("message")
@@ -108,16 +136,7 @@ impl Rollup {
             .service(snapshot_service);
         let latest_snapshot = storage.clone().latest_snapshot();
         let mut delta = cnidarium::StateDelta::new(latest_snapshot);
-        let block = astria_core::generated::astria::execution::v1::Block {
-            number: 0,
-            parent_block_hash: Bytes::from_static(&[69u8; 32]),
-            hash: Bytes::from_static(&[69u8; 32]),
-            timestamp: Some(pbjson_types::Timestamp {
-                seconds: 0,
-                nanos: 0,
-            }),
-        };
-        let block = Block::try_from_raw(block).unwrap();
+
         let text = "itamar why?".to_string();
         let address = Address::from_str("astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm").unwrap();
         address.to_prefix("astria").unwrap();
@@ -128,10 +147,25 @@ impl Rollup {
             .put_account_balance(&address, &asset, balance)
             .unwrap();
 
-        delta.put_block(block, 0).unwrap();
         delta.put_text(text, "ido".to_string(), 0).unwrap();
-        delta.put_last_text_id(1).unwrap();
-        delta.put_commitment_state(0, 0, 2).unwrap();
+        delta.put_last_text_id(0).unwrap();
+        delta
+            .put_commitment_state(0, 0, cfg.celestia_genesis_block_height)
+            .unwrap();
+        if delta.get_block_height().await.is_err() {
+            let block = astria_core::generated::astria::execution::v1::Block {
+                number: 0,
+                parent_block_hash: Bytes::from_static(&[69u8; 32]),
+                hash: Bytes::from_static(&[69u8; 32]),
+                timestamp: Some(pbjson_types::Timestamp {
+                    seconds: 0,
+                    nanos: 0,
+                }),
+            };
+            let block = Block::try_from_raw(block).unwrap();
+            delta.put_block(block, 0).unwrap();
+        }
+
         let write = storage
             .clone()
             .prepare_commit(delta)
@@ -145,6 +179,7 @@ impl Rollup {
         info!("starting snapshot service server");
         let execution_service = execution_service::RollupExecutionService {
             storage: storage.clone(),
+            config: RollupConfig::new(cfg.clone()),
         };
 
         info!("starting rollup");
@@ -179,6 +214,7 @@ fn with_storage(
 async fn handle_submit_transaction(
     mut composer_client: GrpcCollectorServiceClient<tonic::transport::channel::Channel>,
     data: Bytes,
+    rollup_id: RollupId,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     info!("received transaction submission request: {:?}", data);
     let raw_transaction: Transaction = Transaction::decode(data).unwrap();
@@ -188,7 +224,6 @@ async fn handle_submit_transaction(
     );
     let transaction =
         rollup_core::transaction::v1::Transaction::try_from_raw(raw_transaction.clone()).unwrap();
-    let rollup_id = RollupId::new([69_u8; 32]);
     composer_client
         .submit_rollup_transaction(SubmitRollupTransactionRequest {
             rollup_id: Some(rollup_id.into_raw()),
