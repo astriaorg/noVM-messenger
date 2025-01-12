@@ -7,5 +7,4 @@ pub mod rollup;
 pub mod snapshot;
 pub mod storage;
 pub mod text;
-
 pub use config::Config;
