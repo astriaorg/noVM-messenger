@@ -3,6 +3,7 @@ use crate::accounts::action::execute_transfer;
 #[allow(unused_imports)]
 use crate::rollup;
 use crate::rollup::state_ext::{StateReadExt, StateWriteExt};
+use crate::rollup::RollupConfig;
 use crate::text::action::execute_send_text;
 use astria_core::execution::v1::Block;
 
@@ -16,6 +17,7 @@ use astria_core::Protobuf as _;
 use bytes::Bytes;
 use cnidarium::{StateDelta, Storage};
 use prost::Message as _;
+use sha2::{Digest, Sha256};
 use std::sync::Arc;
 
 use tonic::{Request, Response, Status};
@@ -23,6 +25,7 @@ use tracing::info;
 
 pub(crate) struct RollupExecutionService {
     pub storage: Storage,
+    pub config: RollupConfig,
 }
 
 #[async_trait::async_trait]
@@ -32,11 +35,13 @@ impl ExecutionService for RollupExecutionService {
         request: Request<execution::GetGenesisInfoRequest>,
     ) -> Result<Response<execution::GenesisInfo>, Status> {
         println!("getting genesis info:");
+        let rollup_id =
+            RollupId::from_unhashed_bytes(Sha256::digest(self.config.rollup_name.as_bytes()));
         let _request = request.into_inner();
         let genesis_info = execution::GenesisInfo {
-            rollup_id: Some(RollupId::new([69u8; 32]).into_raw()),
-            sequencer_genesis_block_height: 2,
-            celestia_block_variance: 100,
+            rollup_id: Some(rollup_id.into_raw()),
+            sequencer_genesis_block_height: self.config.sequencer_genesis_block_height,
+            celestia_block_variance: self.config.celestia_block_variance,
         };
         println!("{}", self.storage.latest_version());
         println!("genesis_info: {:?}", genesis_info);

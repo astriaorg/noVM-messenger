@@ -3,8 +3,16 @@ use std::path::PathBuf;
 use config::ConfigError;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize, Default)]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct Config {
+    /// The name of the rollup
+    pub rollup_name: String,
+    /// The block height from which to read from the sequencer
+    pub sequencer_genesis_block_height: u32,
+    /// The celestia genesis block height
+    pub celestia_genesis_block_height: u32,
+    /// The maximun variance in blocks between firm and soft
+    pub celestia_block_variance: u64,
     /// The path to penumbra storage db.
     pub db_filepath: PathBuf,
     /// Log level: debug, info, warn, or error
