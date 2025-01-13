@@ -1117,6 +1117,7 @@ dependencies = [
  "anyhow",
  "astria-core",
  "astria-eyre",
+ "astria-merkle",
  "astria-sequencer",
  "astria-sequencer-client",
  "astria-telemetry",

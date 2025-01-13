@@ -11,10 +11,13 @@ use astria_core::execution::v1::Block;
 use astria_core::generated::astria::composer::v1::grpc_collector_service_client::GrpcCollectorServiceClient;
 use astria_core::generated::astria::composer::v1::SubmitRollupTransactionRequest;
 use astria_core::generated::astria::execution::v1::execution_service_server::ExecutionServiceServer;
-use astria_core::primitive::v1::asset::{self, denom};
+use astria_core::primitive::v1::asset::{self, Denom};
 use astria_core::primitive::v1::{Address, RollupId};
 use astria_core::Protobuf;
-use astria_eyre::{anyhow_to_eyre, eyre::WrapErr as _};
+use astria_eyre::{
+    anyhow_to_eyre,
+    eyre::{Result, WrapErr as _},
+};
 use bytes::Bytes;
 use cnidarium::Storage;
 use color_eyre::eyre::{self, eyre};
@@ -27,6 +30,7 @@ use sha2::{Digest, Sha256};
 use state_ext::StateReadExt;
 use std::net::SocketAddr;
 use std::str::FromStr;
+use thiserror::Error;
 use tonic::transport::Server;
 use tower::ServiceBuilder;
 use tracing::info;
@@ -53,7 +57,6 @@ impl RollupConfig {
         }
     }
 }
-pub struct Rollup;
 
 const CHAIN_ID: &str = "astria";
 const FEE_ASSET: &str = "nria";
@@ -67,8 +70,25 @@ pub struct SendMessageRequest {
     pub sender: String,
     pub message: String,
 }
+
+pub struct Rollup;
+
+#[derive(Error, Debug)]
+pub enum RestError {
+    #[error("Not found")]
+    NotFound,
+
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
+
+    #[error("Internal server error")]
+    InternalServerError,
+}
+
+impl warp::reject::Reject for RestError {}
+
 impl Rollup {
-    pub async fn run_until_stopped(cfg: Config) -> eyre::Result<()> {
+    pub async fn run_until_stopped(cfg: Config) -> Result<()> {
         let addr: SocketAddr = cfg.execution_grpc_addr.parse()?;
         let composer_addr = cfg.composer_addr.clone();
         let rollup_id = RollupId::from_unhashed_bytes(Sha256::digest(cfg.rollup_name.as_bytes()));
@@ -77,7 +97,6 @@ impl Rollup {
         let composer_client = GrpcCollectorServiceClient::connect(composer_addr.clone())
             .await
             .wrap_err("failed to connect to composer")?;
-        println!("composer address: {}", composer_addr);
         let storage = cnidarium::Storage::load(cfg.db_filepath.clone(), vec![])
             .await
             .map_err(anyhow_to_eyre)
@@ -124,7 +143,6 @@ impl Rollup {
             .or(submit_unsigned_message)
             .or(get_recents);
 
-        println!("Rest server listening on {}", 3030);
         // Spawn the server in a separate async task so it doesn't block the main program
         tokio::spawn(async move {
             warp::serve(routes).run(([0, 0, 0, 0], 3030)).await;
@@ -137,15 +155,24 @@ impl Rollup {
         let latest_snapshot = storage.clone().latest_snapshot();
         let mut delta = cnidarium::StateDelta::new(latest_snapshot);
 
-        let text = "itamar why?".to_string();
-        let address = Address::from_str("astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm").unwrap();
-        address.to_prefix("astria").unwrap();
+        // Set initial state
+        let block = astria_core::generated::astria::execution::v1::Block {
+            number: 0,
+            parent_block_hash: Bytes::from_static(&[69u8; 32]),
+            hash: Bytes::from_static(&[69u8; 32]),
+            timestamp: Some(pbjson_types::Timestamp {
+                seconds: 0,
+                nanos: 0,
+            }),
+        };
+        let block = Block::try_from_raw(block)?;
+        let text = "hello world".to_string();
+        let address = Address::from_str("astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm")?;
+        address.to_prefix("astria")?;
         let asset = crate::accounts::state_ext::nria();
         let balance = 2_000_000_000u128;
 
-        delta
-            .put_account_balance(&address, &asset, balance)
-            .unwrap();
+        delta.put_account_balance(&address, &asset, balance)?;
 
         delta.put_text(text, "ido".to_string(), 0).unwrap();
         delta.put_last_text_id(0).unwrap();
@@ -217,24 +244,28 @@ async fn handle_submit_transaction(
     rollup_id: RollupId,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     info!("received transaction submission request: {:?}", data);
-    let raw_transaction: Transaction = Transaction::decode(data).unwrap();
-    info!(
-        "submitting transaction to sequencer... raw transaction {:?}",
-        raw_transaction
-    );
-    let transaction =
-        rollup_core::transaction::v1::Transaction::try_from_raw(raw_transaction.clone()).unwrap();
-    composer_client
+    let raw_transaction = match Transaction::decode(data) {
+        Ok(transaction) => transaction,
+        Err(_) => {
+            return Err(warp::reject::custom(RestError::InvalidInput(
+                "failed to decode transaction".to_string(),
+            )))
+        }
+    };
+    let rollup_id = RollupId::new([69_u8; 32]); // TODO: get rollup id from config
+    match composer_client
         .submit_rollup_transaction(SubmitRollupTransactionRequest {
             rollup_id: Some(rollup_id.into_raw()),
             data: raw_transaction.encode_to_vec().into(),
         })
         .await
-        .unwrap();
-    Ok(warp::reply::json(&format!(
-        "transaction {:?} submitted to sequencer",
-        transaction
-    )))
+    {
+        Ok(_) => Ok(warp::reply::json(&format!(
+            "transaction {:?} submitted to sequencer",
+            raw_transaction
+        ))),
+        Err(_) => Err(warp::reject::reject()),
+    }
 }
 
 #[allow(dead_code)]
@@ -245,15 +276,14 @@ async fn handle_get_account_balance(
 ) -> Result<impl warp::Reply, warp::Rejection> {
     let snapshot = storage.latest_snapshot();
     let delta = cnidarium::StateDelta::new(snapshot);
-    let denom = asset::Denom::from_str(asset.as_str()).unwrap();
-    let account_balance = delta
+    let denom = Denom::from_str(asset.as_str()).unwrap();
+    match delta
         .get_account_balance(&Address::from_str(account.as_str()).unwrap(), &denom)
         .await
-        .unwrap();
-    let response = account_balance.to_string();
-    Ok(warp::reply::json(&response))
-
-    // Err(_) => Err(warp::reject::not_found()),
+    {
+        Ok(balance) => Ok(warp::reply::json(&balance.to_string())),
+        Err(_) => Err(warp::reject::reject()),
+    }
 }
 
 #[allow(dead_code)]
@@ -263,9 +293,10 @@ async fn handle_get_text_from_id(
 ) -> Result<impl warp::Reply, warp::Rejection> {
     let snapshot = storage.latest_snapshot();
     let delta = cnidarium::StateDelta::new(snapshot);
-    let text = delta.get_text(id).await.unwrap();
-    let response = String::from(text);
-    Ok(warp::reply::json(&response))
+    match delta.get_text(id).await {
+        Ok(text) => Ok(warp::reply::json(&String::from(text))),
+        Err(_) => Err(warp::reject::reject()),
+    }
 }
 
 #[allow(dead_code)]

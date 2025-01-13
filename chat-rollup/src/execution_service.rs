@@ -8,20 +8,34 @@ use crate::text::action::execute_send_text;
 use astria_core::execution::v1::Block;
 
 use astria_core::generated::astria::execution::v1::execution_service_server::ExecutionService;
-use astria_core::generated::astria::execution::v1::{self as execution};
+use astria_core::generated::astria::execution::v1::{self as execution, ExecuteBlockRequest};
 use astria_core::generated::astria::sequencerblock::v1::rollup_data::Value::{
     Deposit, SequencedData,
 };
+use pbjson_types::Timestamp;
+use sha2::{Digest, Sha256};
+
 use astria_core::primitive::v1::RollupId;
 use astria_core::Protobuf as _;
 use bytes::Bytes;
 use cnidarium::{StateDelta, Storage};
 use prost::Message as _;
-use sha2::{Digest, Sha256};
+use serde::de;
+use std::os::macos::raw;
 use std::sync::Arc;
+use tendermint::node::info;
+use tracing::info;
 
 use tonic::{Request, Response, Status};
-use tracing::info;
+use tracing::error;
+
+fn compute_block_hash(prev_block_hash: &[u8], merkle_root: &[u8], timestamp: Timestamp) -> Vec<u8> {
+    let mut hasher = sha2::Sha256::new();
+    hasher.update(prev_block_hash);
+    hasher.update(merkle_root);
+    hasher.update(timestamp.encode_to_vec());
+    hasher.finalize().to_vec()
+}
 
 pub(crate) struct RollupExecutionService {
     pub storage: Storage,
@@ -34,17 +48,13 @@ impl ExecutionService for RollupExecutionService {
         self: Arc<Self>,
         request: Request<execution::GetGenesisInfoRequest>,
     ) -> Result<Response<execution::GenesisInfo>, Status> {
-        println!("getting genesis info:");
         let rollup_id =
             RollupId::from_unhashed_bytes(Sha256::digest(self.config.rollup_name.as_bytes()));
-        let _request = request.into_inner();
         let genesis_info = execution::GenesisInfo {
             rollup_id: Some(rollup_id.into_raw()),
             sequencer_genesis_block_height: self.config.sequencer_genesis_block_height,
             celestia_block_variance: self.config.celestia_block_variance,
         };
-        println!("{}", self.storage.latest_version());
-        println!("genesis_info: {:?}", genesis_info);
         Ok(Response::new(genesis_info))
     }
 
@@ -52,7 +62,6 @@ impl ExecutionService for RollupExecutionService {
         self: Arc<Self>,
         request: Request<execution::GetBlockRequest>,
     ) -> Result<Response<execution::Block>, Status> {
-        println!("getting block:");
         let request = request.into_inner();
         let snapshot = self.storage.latest_snapshot();
         let state_delta = StateDelta::new(snapshot);
@@ -61,6 +70,7 @@ impl ExecutionService for RollupExecutionService {
                 Some(id) => match id {
                     execution::block_identifier::Identifier::BlockNumber(height) => {
                         let block = state_delta.get_block(height).await.unwrap();
+                        info!("block: {:?}", block);
                         Ok(Response::new(block.into_raw()))
                     }
                     execution::block_identifier::Identifier::BlockHash(_) => {
@@ -75,25 +85,33 @@ impl ExecutionService for RollupExecutionService {
 
     async fn batch_get_blocks(
         self: Arc<Self>,
-        _request: Request<execution::BatchGetBlocksRequest>,
+        request: Request<execution::BatchGetBlocksRequest>,
     ) -> Result<Response<execution::BatchGetBlocksResponse>, Status> {
-        // let request = request.into_inner();
-        // let state = self.app.read().await;
-        // let mut blocks = Vec::new();
-        // for identifier in request.identifiers {
-        //     match identifier.identifier {
-        //         Some(id) => match id {
-        //             execution::block_identifier::Identifier::BlockNumber(block_number) => {
-        //                 blocks.push(state.get_block(block_number).unwrap().to_owned().into_raw());
-        //             }
-        //             execution::block_identifier::Identifier::BlockHash(_) => {
-        //                 return Err(Status::unimplemented("Get Block by hash not implemented"))
-        //             }
-        //         },
-        //         None => return Err(Status::invalid_argument("missing block identifier")),
-        //     }
-        // }
-        Ok(Response::new(execution::BatchGetBlocksResponse::default()))
+        let request = request.into_inner();
+        let snapshot = self.storage.latest_snapshot();
+        let state_delta = StateDelta::new(snapshot);
+        let mut blocks = execution::BatchGetBlocksResponse { blocks: Vec::new() };
+        for identifier in request.identifiers {
+            match identifier.identifier {
+                Some(id) => match id {
+                    execution::block_identifier::Identifier::BlockNumber(block_number) => {
+                        blocks.blocks.push(
+                            state_delta
+                                .get_block(block_number)
+                                .await
+                                .unwrap()
+                                .to_owned()
+                                .into_raw(),
+                        );
+                    }
+                    execution::block_identifier::Identifier::BlockHash(_) => {
+                        return Err(Status::unimplemented("Get Block by hash not implemented"))
+                    }
+                },
+                None => return Err(Status::invalid_argument("missing block identifier")),
+            }
+        }
+        Ok(Response::new(blocks))
     }
 
     async fn execute_block(
@@ -103,18 +121,14 @@ impl ExecutionService for RollupExecutionService {
         let request = request.into_inner();
         let timestamp = request.timestamp.unwrap();
         let mut transactions: Vec<Bytes> = Vec::new();
+        let mut deposits = Vec::new();
+
+        // collect rollup data
         for rollup_data in request.transactions {
-            // match rollup_data.value {
-            //     Some(value) => match value {
-            //         SequencedData(data) => transactions.push(data),
-            //         Deposit(_) => {}
-            //     },
-            //     None => {}
-            // };
             if let Some(value) = rollup_data.value {
                 match value {
                     SequencedData(data) => transactions.push(data),
-                    Deposit(_) => {}
+                    Deposit(data) => deposits.push(data),
                 }
             }
         }
@@ -123,13 +137,16 @@ impl ExecutionService for RollupExecutionService {
         let mut state_delta = StateDelta::new(snapshot);
         let commitment = state_delta.get_commitment_state().await.unwrap();
         let block_height = commitment.soft;
-        info!("soft_height: {:?}", block_height);
-        // Process transactions
+
+        // Execute transactions
+        let mut executed_deposits: Vec<
+            astria_core::generated::astria::sequencerblock::v1::Deposit,
+        > = Vec::new();
+        let mut executed_transaction = Vec::new();
         for tx in transactions {
             let raw_transaction =
                 rollup_core::generated::protocol::transaction::v1::Transaction::decode(tx.clone())
                     .unwrap();
-            info!("decoded transaction: {:?}", raw_transaction);
 
             let transaction =
                 rollup_core::transaction::v1::Transaction::try_from_raw(raw_transaction).unwrap();
@@ -138,37 +155,42 @@ impl ExecutionService for RollupExecutionService {
             for action in actions {
                 match action {
                     rollup_core::transaction::v1::Action::Transfer(transfer) => {
-                        info!("executing transfer: {:?}", transfer);
                         execute_transfer(transfer, sender, &mut state_delta)
                             .await
                             .unwrap();
                     }
                     rollup_core::transaction::v1::Action::Text(send_text) => {
-                        info!("executing send_text: {:?}", send_text);
                         execute_send_text(send_text, &mut state_delta)
                             .await
                             .unwrap();
                     }
                 };
             }
+            executed_transaction.push(tx);
         }
-        // proccess_transactions(transactions, self.storage.clone())
-        //     .await
-        //     .unwrap();
-        // execute new block
+        // calculate merkle root of executed transactions
+        let mut executed_transactions_merkle = merkle::Tree::new();
+        for executed_tx in executed_transaction {
+            executed_transactions_merkle.push(executed_tx.as_ref());
+        }
+
+        let merkle_root = executed_transactions_merkle.root();
+        let block_hash =
+            compute_block_hash(&request.prev_block_hash, &merkle_root, timestamp.clone());
         let new_block = astria_core::generated::astria::execution::v1::Block {
             number: block_height + 1,
-            parent_block_hash: Bytes::from_static(&[69u8; 32]),
-            hash: Bytes::from_static(&[69u8; 32]),
+            parent_block_hash: request.prev_block_hash, // get last block hash
+            hash: Bytes::copy_from_slice(&block_hash), // hash with previous block hash and transactions
             timestamp: Some(timestamp),
         };
-        // save to state
 
         let block = Block::try_from_raw(new_block.clone()).unwrap();
         state_delta.put_block(block, block_height + 1).unwrap();
         let write_batch: cnidarium::StagedWriteBatch =
             self.storage.prepare_commit(state_delta).await.unwrap();
         let _hash = self.storage.commit_batch(write_batch).unwrap();
+        info!("executed block: {:?}", new_block);
+
         Ok(Response::new(new_block))
     }
 
@@ -179,7 +201,6 @@ impl ExecutionService for RollupExecutionService {
         let snapshot = self.storage.latest_snapshot();
         let delta_state = StateDelta::new(snapshot);
         let commitment_state = delta_state.get_commitment_state().await.unwrap();
-        info!("got commitment state: {:?}", commitment_state);
         let soft = delta_state
             .get_block(commitment_state.soft)
             .await
@@ -202,7 +223,6 @@ impl ExecutionService for RollupExecutionService {
         self: Arc<Self>,
         request: Request<execution::UpdateCommitmentStateRequest>,
     ) -> Result<Response<execution::CommitmentState>, Status> {
-        // let mut state = self.app.write().await;
         let snapshot = self.storage.latest_snapshot();
         let mut state_delta = StateDelta::new(snapshot);
         let commitment_state_request = request.into_inner().commitment_state.unwrap();
@@ -213,7 +233,7 @@ impl ExecutionService for RollupExecutionService {
         let soft_block = state_delta.get_block(soft_request).await.unwrap();
         let firm_block = state_delta.get_block(firm_request).await.unwrap();
         if *soft_block.hash() != soft_block_request.hash {
-            println!(
+            error!(
                 "soft block hash does not match: current: {:?},  request: {:?}",
                 soft_block.hash().to_owned(),
                 soft_block_request.hash
@@ -239,9 +259,6 @@ impl ExecutionService for RollupExecutionService {
         let write_batch = self.storage.prepare_commit(state_delta).await.unwrap();
         let _hash = self.storage.commit_batch(write_batch).unwrap();
 
-        // let games = self.game_manager.read().await;
-        // let game_state = games.game_status(0);
-        // println!("game 0 state: {:?}", game_state);
         Ok(Response::new(new_commitment_state))
     }
 }

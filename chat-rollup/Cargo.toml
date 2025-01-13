@@ -27,6 +27,7 @@ astria-core = { git = "https://github.com/astriaorg/astria.git", package = "astr
   "test-utils",
 
 ] }
+merkle = { git = "https://github.com/astriaorg/astria.git", package = "astria-merkle" }
 tower-abci = "0.12.0"
 astria-eyre = { git = "https://github.com/astriaorg/astria.git", package = "astria-eyre", features = [
   "anyhow",

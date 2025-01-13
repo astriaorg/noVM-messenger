@@ -9,13 +9,14 @@ pub mod snapshot;
 pub mod storage;
 pub mod text;
 
-use astria_eyre::eyre::{Result, WrapErr as _};
+use astria_eyre::eyre::WrapErr as _;
 use astria_sequencer::BUILD_INFO;
 use rollup::Rollup;
-use tracing::info;
+use std::process::ExitCode;
+use tracing::{error, info};
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> ExitCode {
     astria_eyre::install().expect("astria eyre hook must be the first hook installed");
     let cfg = config::Config::from_env().unwrap();
     eprintln!(
@@ -37,8 +38,8 @@ async fn main() -> Result<()> {
         .wrap_err("failed to setup telemetry")
     {
         Err(e) => {
-            eprintln!("initializing sequencer failed:\n{e:?}");
-            return Ok(());
+            eprintln!("initializing rollup failed:\n{e:?}");
+            return ExitCode::FAILURE;
         }
         Ok(metrics_and_guard) => metrics_and_guard,
     };
@@ -46,7 +47,8 @@ async fn main() -> Result<()> {
     if cfg
         .db_filepath
         .try_exists()
-        .context("failed checking for existence of db storage file")?
+        .context("failed checking for existence of db storage file")
+        .unwrap()
     {
         info!(
             path = %cfg.db_filepath.display(),
@@ -58,6 +60,15 @@ async fn main() -> Result<()> {
             "creating storage db"
         );
     }
-    Rollup::run_until_stopped(cfg).await?;
-    astria_eyre::eyre::Ok(())
+
+    return match Rollup::run_until_stopped(cfg).await {
+        Ok(()) => {
+            info!("composer stopped");
+            ExitCode::SUCCESS
+        }
+        Err(error) => {
+            error!(%error, "Composer exited with error");
+            ExitCode::FAILURE
+        }
+    };
 }
