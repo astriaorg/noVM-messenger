@@ -1,9 +1,9 @@
 [workspace]
 members = [
-    "chat-rollup",
-    "rollup-cli",
-    "rollup-core",
-    "tools/protobuf-compiler",
+  "chat-rollup",
+  "rollup-cli",
+  "rollup-core",
+  "tools/protobuf-compiler",
 ]
 
 [workspace.dependencies]
