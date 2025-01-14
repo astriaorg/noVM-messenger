@@ -126,6 +126,11 @@ impl Rollup {
             .and(with_storage(storage.clone()))
             .and_then(handle_get_account_balance);
 
+        let get_account_nonce = warp::path!("get_account_nonce" / String)
+            .and(warp::get())
+            .and(with_storage(storage.clone()))
+            .and_then(handle_get_account_nonce);
+
         let get_text_from_id = warp::path!("get_text_from_id" / u64)
             .and(warp::get())
             .and(with_storage(storage.clone()))
@@ -141,7 +146,8 @@ impl Rollup {
             .or(get_account_balance)
             .or(get_text_from_id)
             .or(submit_unsigned_message)
-            .or(get_recents);
+            .or(get_recents)
+            .or(get_account_nonce);
 
         // Spawn the server in a separate async task so it doesn't block the main program
         tokio::spawn(async move {
@@ -238,7 +244,6 @@ fn with_storage(
     warp::any().map(move || storage.clone())
 }
 
-#[allow(dead_code)]
 async fn handle_submit_transaction(
     mut composer_client: GrpcCollectorServiceClient<tonic::transport::channel::Channel>,
     data: Bytes,
@@ -268,7 +273,6 @@ async fn handle_submit_transaction(
     }
 }
 
-#[allow(dead_code)]
 async fn handle_get_account_balance(
     account: String,
     asset: String,
@@ -286,7 +290,6 @@ async fn handle_get_account_balance(
     }
 }
 
-#[allow(dead_code)]
 async fn handle_get_text_from_id(
     id: u64,
     storage: Storage,
@@ -380,4 +383,19 @@ pub(crate) fn address_from_signing_key(
 
     // Return the generated address
     Ok(from_address)
+}
+
+async fn handle_get_account_nonce(
+    account: String,
+    storage: Storage,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    let snapshot = storage.latest_snapshot();
+    let delta = cnidarium::StateDelta::new(snapshot);
+    match delta
+        .get_account_nonce(&Address::from_str(account.as_str()).unwrap())
+        .await
+    {
+        Ok(nonce) => Ok(warp::reply::json(&nonce.to_string())),
+        Err(_) => Err(warp::reject::reject()),
+    }
 }

@@ -20,13 +20,19 @@ pub(crate) async fn submit_transaction(
     let from_address = address_from_signing_key(&sequencer_key, prefix)?;
     println!("sending tx from address: {from_address}");
 
-    // let nonce_res = sequencer_client
-    //     .get_latest_nonce(from_address)
-    //     .await
-    //     .wrap_err("failed to get nonce")?;
+    let response = reqwest::Client::new()
+        .get(format!("{}/get_account_nonce/{}", rollup_url, from_address))
+        .send()
+        .await?;
+    let text = response.text().await?;
+    // Remove the surrounding quotes and then parse
+    let nonce = text.trim_matches('"').parse::<u32>().map_err(|e| {
+        println!("Failed to parse '{}' as nonce: {}", text, e);
+        e
+    })?;
 
     let tx = TransactionBody::builder()
-        .nonce(0)
+        .nonce(nonce)
         .chain_id(chain_id)
         .actions(vec![action])
         .try_build()
