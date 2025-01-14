@@ -58,7 +58,7 @@ impl RollupConfig {
     }
 }
 
-const CHAIN_ID: &str = "astria";
+const CHAIN_ID: &str = "astria-chat";
 const FEE_ASSET: &str = "nria";
 const FROM: &str = "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm";
 const SEQUENCER_PRIVATE_KEY: &str =
@@ -175,7 +175,8 @@ impl Rollup {
         delta.put_account_balance(&address, &asset, balance)?;
 
         delta.put_text(text, "ido".to_string(), 0).unwrap();
-        delta.put_last_text_id(0).unwrap();
+        // delta.put_last_text_id(0).unwrap();
+        delta.put_last_text_id(1).unwrap();
         delta
             .put_commitment_state(0, 0, cfg.celestia_genesis_block_height)
             .unwrap();
@@ -252,7 +253,6 @@ async fn handle_submit_transaction(
             )))
         }
     };
-    let rollup_id = RollupId::new([69_u8; 32]); // TODO: get rollup id from config
     match composer_client
         .submit_rollup_transaction(SubmitRollupTransactionRequest {
             rollup_id: Some(rollup_id.into_raw()),
@@ -315,7 +315,7 @@ async fn handle_submit_unsigned_text(
         .actions(vec![Action::Text(SendText {
             text: req.message.clone(),
             from: req.sender.to_string(),
-            fee_asset: fee_asset,
+            fee_asset,
         })])
         .try_build()
         .wrap_err("failed to construct a transaction")
