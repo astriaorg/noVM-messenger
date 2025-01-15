@@ -57,6 +57,12 @@ where
         .put_text(action.text.clone(), action.from.clone(), last_id)
         .unwrap();
     state.put_last_text_id(last_id + 1).unwrap();
+
+    state
+        .decrease_balance(from, &action.fee_asset, 1)
+        .await
+        .wrap_err("failed decreasing `from` account balance")?;
+
     let nonce = state
         .get_account_nonce(from)
         .await
