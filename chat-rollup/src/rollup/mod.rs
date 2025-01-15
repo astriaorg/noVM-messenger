@@ -60,7 +60,7 @@ impl RollupConfig {
 
 const CHAIN_ID: &str = "astria-chat";
 const FEE_ASSET: &str = "nria";
-const FROM: &str = "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm";
+// const FROM: &str = "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm";
 const SEQUENCER_PRIVATE_KEY: &str =
     "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90";
 const NONCE: u32 = 0;
@@ -92,7 +92,7 @@ impl Rollup {
         let addr: SocketAddr = cfg.execution_grpc_addr.parse()?;
         let composer_addr = cfg.composer_addr.clone();
         let rollup_id = RollupId::from_unhashed_bytes(Sha256::digest(cfg.rollup_name.as_bytes()));
-        let warp_rollup_id = warp::any().map(move || rollup_id.clone());
+        let warp_rollup_id = warp::any().map(move || rollup_id);
 
         let composer_client = GrpcCollectorServiceClient::connect(composer_addr.clone())
             .await
@@ -107,6 +107,7 @@ impl Rollup {
             .and(with_composer(composer_client.clone()))
             .and(warp::body::bytes())
             .and(warp_rollup_id)
+            .and(with_storage(storage.clone()))
             .and_then(handle_submit_transaction);
 
         let submit_unsigned_message = warp::path!("message")
@@ -162,7 +163,7 @@ impl Rollup {
         let mut delta = cnidarium::StateDelta::new(latest_snapshot);
 
         // Set initial state
-        let block = astria_core::generated::astria::execution::v1::Block {
+        let _block = astria_core::generated::astria::execution::v1::Block {
             number: 0,
             parent_block_hash: Bytes::from_static(&[69u8; 32]),
             hash: Bytes::from_static(&[69u8; 32]),
@@ -171,7 +172,7 @@ impl Rollup {
                 nanos: 0,
             }),
         };
-        let block = Block::try_from_raw(block)?;
+        // let block = Block::try_from_raw(block)?;
         let text = "hello world".to_string();
         let address = Address::from_str("astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm")?;
         address.to_prefix("astria")?;
@@ -179,6 +180,7 @@ impl Rollup {
         let balance = 2_000_000_000u128;
 
         delta.put_account_balance(&address, &asset, balance)?;
+        // delta.put_account_nonce(&address, 123)?;
 
         delta.put_text(text, "ido".to_string(), 0).unwrap();
         // delta.put_last_text_id(0).unwrap();
@@ -198,6 +200,7 @@ impl Rollup {
             };
             let block = Block::try_from_raw(block).unwrap();
             delta.put_block(block, 0).unwrap();
+            // delta.put_account_nonce(&address, 321)?;
         }
 
         let write = storage
@@ -248,7 +251,10 @@ async fn handle_submit_transaction(
     mut composer_client: GrpcCollectorServiceClient<tonic::transport::channel::Channel>,
     data: Bytes,
     rollup_id: RollupId,
+    _storage: Storage,
 ) -> Result<impl warp::Reply, warp::Rejection> {
+    // let snapshot = storage.latest_snapshot();
+    // let delta = cnidarium::StateDelta::new(snapshot);
     info!("received transaction submission request: {:?}", data);
     let raw_transaction = match Transaction::decode(data) {
         Ok(transaction) => transaction,
@@ -258,6 +264,7 @@ async fn handle_submit_transaction(
             )))
         }
     };
+
     match composer_client
         .submit_rollup_transaction(SubmitRollupTransactionRequest {
             rollup_id: Some(rollup_id.into_raw()),

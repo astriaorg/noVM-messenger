@@ -1,10 +1,11 @@
 use crate::accounts::action::execute_transfer;
+use crate::text::action::execute_send_text;
 
+// use crate::accounts::StateWriteExt;
 #[allow(unused_imports)]
 use crate::rollup;
 use crate::rollup::state_ext::{StateReadExt, StateWriteExt};
 use crate::rollup::RollupConfig;
-use crate::text::action::execute_send_text;
 use astria_core::execution::v1::Block;
 
 use astria_core::generated::astria::execution::v1::execution_service_server::ExecutionService;
@@ -162,7 +163,7 @@ impl ExecutionService for RollupExecutionService {
                             .unwrap();
                     }
                     rollup_core::transaction::v1::Action::Text(send_text) => {
-                        execute_send_text(send_text, &mut state_delta)
+                        execute_send_text(send_text, sender, &mut state_delta)
                             .await
                             .unwrap();
                     }
