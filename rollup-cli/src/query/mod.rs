@@ -1,8 +1,8 @@
 use clap::Subcommand;
 use color_eyre::eyre;
-mod send_text;
-mod submit;
-mod transfer;
+mod balance;
+mod nonce;
+mod texts;
 
 #[derive(Debug, clap::Args)]
 pub(super) struct Command {
@@ -13,8 +13,9 @@ pub(super) struct Command {
 impl Command {
     pub(super) async fn run(self) -> eyre::Result<()> {
         match self.command {
-            SubCommand::Transfer(transfer) => transfer.run().await,
-            SubCommand::Text(send_text) => send_text.run().await,
+            SubCommand::Balance(balance) => balance.run().await,
+            SubCommand::Nonce(nonce) => nonce.run().await,
+            SubCommand::Texts(texts) => texts.run().await,
             // SubCommand::Submit(submit) => submit.run().await,
         }
     }
@@ -23,6 +24,7 @@ impl Command {
 /// Interact with a Sequencer node
 #[derive(Debug, Subcommand)]
 enum SubCommand {
-    Transfer(transfer::Command),
-    Text(send_text::Command),
+    Balance(balance::Command),
+    Nonce(nonce::Command),
+    Texts(texts::Command),
 }

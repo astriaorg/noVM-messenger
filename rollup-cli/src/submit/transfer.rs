@@ -6,7 +6,7 @@ use crate::utils::submit_transaction;
 
 #[derive(clap::Args, Debug)]
 pub(super) struct Command {
-    // The address of the Sequencer account to send amount to
+    // The address of the Rollup account to send amount to
     to_address: Address,
     // The amount being sent
     #[arg(long)]
@@ -15,7 +15,7 @@ pub(super) struct Command {
     #[arg(long, default_value = "astria")]
     prefix: String,
     /// The private key of account being sent from
-    #[arg(long, env = "SEQUENCER_PRIVATE_KEY")]
+    #[arg(long, env = "PRIVATE_KEY")]
     // TODO: https://github.com/astriaorg/astria/issues/594
     // Don't use a plain text private, prefer wrapper like from
     // the secrecy crate with specialized `Debug` and `Drop` implementations
@@ -24,17 +24,17 @@ pub(super) struct Command {
     /// The url of the Sequencer node
     #[arg(
         long,
-        env = "SEQUENCER_URL",
+        env = "ROLLUP_URL",
         default_value = crate::DEFAULT_SEQUENCER_RPC
     )]
-    sequencer_url: String,
-    /// The chain id of the sequencing chain being used
+    rollup_url: String,
+    /// The chain id of the rollup chain being used
     #[arg(
-        long = "sequencer.chain-id",
-        env = "ROLLUP_SEQUENCER_CHAIN_ID",
+        long = "chain-id",
+        env = "ROLLUP_CHAIN_ID",
         default_value = crate::DEFAULT_SEQUENCER_CHAIN_ID
     )]
-    sequencer_chain_id: String,
+    chain_id: String,
     /// The asset to transer.
     #[arg(long, default_value = "nria")]
     asset: asset::Denom,
@@ -46,8 +46,8 @@ pub(super) struct Command {
 impl Command {
     pub(super) async fn run(self) -> eyre::Result<()> {
         let res = submit_transaction(
-            self.sequencer_url.as_str(),
-            self.sequencer_chain_id.clone(),
+            &self.rollup_url.as_str(),
+            self.chain_id.clone(),
             &self.prefix,
             self.private_key.as_str(),
             Action::Transfer(Transfer {

@@ -15,7 +15,7 @@ pub(super) struct Command {
     #[arg(long, default_value = "astria")]
     prefix: String,
     /// The private key of account being sent from
-    #[arg(long, env = "SEQUENCER_PRIVATE_KEY")]
+    #[arg(long, env = "ROLLUP_PRIVATE_KEY")]
     // TODO: https://github.com/astriaorg/astria/issues/594
     // Don't use a plain text private, prefer wrapper like from
     // the secrecy crate with specialized `Debug` and `Drop` implementations
@@ -24,17 +24,17 @@ pub(super) struct Command {
     /// The url of the Sequencer node
     #[arg(
         long,
-        env = "SEQUENCER_URL",
+        env = "ROLLUP_URL",
         default_value = crate::DEFAULT_SEQUENCER_RPC
     )]
-    sequencer_url: String,
-    /// The chain id of the sequencing chain being used
+    rollup_url: String,
+    /// The chain id of the rollup chain being used
     #[arg(
-        long = "sequencer.chain-id",
-        env = "ROLLUP_SEQUENCER_CHAIN_ID",
+        long = "chain-id",
+        env = "ROLLUP_CHAIN_ID",
         default_value = crate::DEFAULT_SEQUENCER_CHAIN_ID
     )]
-    sequencer_chain_id: String,
+    chain_id: String,
     /// The asset to pay the transfer fees with.
     #[arg(long, default_value = "nria")]
     fee_asset: asset::Denom,
@@ -43,8 +43,8 @@ pub(super) struct Command {
 impl Command {
     pub(super) async fn run(self) -> eyre::Result<()> {
         let res = submit_transaction(
-            self.sequencer_url.as_str(),
-            self.sequencer_chain_id.clone(),
+            self.rollup_url.as_str(),
+            self.chain_id.clone(),
             &self.prefix,
             self.private_key.as_str(),
             Action::Text(SendText {
@@ -54,13 +54,13 @@ impl Command {
             }),
         )
         .await
-        .wrap_err("failed to submit transfer transaction")?;
+        .wrap_err("failed to submit Text transaction")?;
         if res.status().is_success() {
-            println!("Transfer completed!");
+            println!("Text Transaction completed!");
             Ok(())
         } else {
-            println!("Transfer failed: {:?}", res.error_for_status());
-            Err(eyre::eyre!("Transfer failed"))
+            println!("Text Transaction failed: {:?}", res.error_for_status());
+            Err(eyre::eyre!("Text failed"))
         }
     }
 }

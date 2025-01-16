@@ -4,7 +4,8 @@
               are not expected to be copied, cloned, or passed around. Therefore large differences \
               between enum variants are not expected to cause performance issues."
 )]
-mod rollup;
+mod query;
+mod submit;
 mod utils;
 
 use clap::{Parser, Subcommand};
@@ -33,7 +34,8 @@ impl Cli {
     pub async fn run() -> eyre::Result<()> {
         let cli = Self::parse();
         match cli.command {
-            Command::Rollup(rollup) => rollup.run().await,
+            Command::Submit(submit) => submit.run().await,
+            Command::Query(query) => query.run().await,
         }
     }
 }
@@ -41,5 +43,6 @@ impl Cli {
 #[derive(Debug, Subcommand)]
 enum Command {
     /// Interact with rollup
-    Rollup(rollup::Command),
+    Submit(submit::Command),
+    Query(query::Command),
 }
