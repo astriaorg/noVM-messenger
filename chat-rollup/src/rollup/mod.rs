@@ -100,7 +100,7 @@ impl Rollup {
         let storage = cnidarium::Storage::load(cfg.db_filepath.clone(), vec![])
             .await
             .map_err(anyhow_to_eyre)
-            .wrap_err("failed to load storage backing chain state")?;
+            .wrap_err("failed to load storage backing chain state, SOME CHANGE TO DELETE")?;
 
         let submit_transaction = warp::path!("submit_transaction")
             .and(warp::post())
