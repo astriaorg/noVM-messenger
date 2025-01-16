@@ -60,10 +60,10 @@ impl RollupConfig {
 
 const CHAIN_ID: &str = "astria-chat";
 const FEE_ASSET: &str = "nria";
-// const FROM: &str = "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm";
+const FROM: &str = "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm";
 const SEQUENCER_PRIVATE_KEY: &str =
     "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90";
-const NONCE: u32 = 0;
+// const NONCE: u32 = 0;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SendMessageRequest {
@@ -107,13 +107,14 @@ impl Rollup {
             .and(with_composer(composer_client.clone()))
             .and(warp::body::bytes())
             .and(warp_rollup_id)
-            .and(with_storage(storage.clone()))
             .and_then(handle_submit_transaction);
 
         let submit_unsigned_message = warp::path!("message")
             .and(warp::post())
             .and(warp::body::json())
             .and(with_composer(composer_client.clone()))
+            .and(with_storage(storage.clone()))
+            .and(warp_rollup_id)
             .and_then(handle_submit_unsigned_text)
             .with(
                 warp::cors()
@@ -172,18 +173,13 @@ impl Rollup {
                 nanos: 0,
             }),
         };
-        // let block = Block::try_from_raw(block)?;
         let text = "hello world".to_string();
-        let address = Address::from_str("astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm")?;
+        let address = Address::from_str(FROM)?;
         address.to_prefix("astria")?;
         let asset = crate::accounts::state_ext::nria();
         let balance = 2_000_000_000u128;
-
         delta.put_account_balance(&address, &asset, balance)?;
-        // delta.put_account_nonce(&address, 123)?;
-
         delta.put_text(text, "ido".to_string(), 0).unwrap();
-        // delta.put_last_text_id(0).unwrap();
         delta.put_last_text_id(1).unwrap();
         delta
             .put_commitment_state(0, 0, cfg.celestia_genesis_block_height)
@@ -200,7 +196,6 @@ impl Rollup {
             };
             let block = Block::try_from_raw(block).unwrap();
             delta.put_block(block, 0).unwrap();
-            // delta.put_account_nonce(&address, 321)?;
         }
 
         let write = storage
@@ -251,7 +246,6 @@ async fn handle_submit_transaction(
     mut composer_client: GrpcCollectorServiceClient<tonic::transport::channel::Channel>,
     data: Bytes,
     rollup_id: RollupId,
-    _storage: Storage,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     // let snapshot = storage.latest_snapshot();
     // let delta = cnidarium::StateDelta::new(snapshot);
@@ -313,14 +307,22 @@ async fn handle_get_text_from_id(
 async fn handle_submit_unsigned_text(
     req: SendMessageRequest,
     mut composer_client: GrpcCollectorServiceClient<tonic::transport::channel::Channel>,
+    storage: Storage,
+    rollup_id: RollupId,
 ) -> Result<impl warp::Reply, warp::Rejection> {
+    let snapshot = storage.latest_snapshot();
+    let delta = cnidarium::StateDelta::new(snapshot);
     let sequencer_key = signing_key_from_private_key(SEQUENCER_PRIVATE_KEY).unwrap();
     let fee_asset = asset::denom::Denom::from_str(FEE_ASSET).unwrap();
     let from_address = address_from_signing_key(&sequencer_key, "astria").unwrap();
     println!("sending tx from address: {from_address}");
-    let rollup_id = RollupId::new([69_u8; 32]);
+    let nonce = match delta.get_account_nonce(&from_address).await {
+        Ok(nonce) => Ok(nonce),
+        Err(_) => Err(warp::reject::reject()),
+    }
+    .unwrap();
     let tx = TransactionBody::builder()
-        .nonce(NONCE)
+        .nonce(nonce)
         .chain_id(CHAIN_ID)
         .actions(vec![Action::Text(SendText {
             text: req.message.clone(),

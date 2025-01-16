@@ -58,10 +58,11 @@ where
         .unwrap();
     state.put_last_text_id(last_id + 1).unwrap();
 
-    state
-        .decrease_balance(from, &action.fee_asset, 1)
-        .await
-        .wrap_err("failed decreasing `from` account balance")?;
+    // TODO: Implement fees and fee recipient
+    // state
+    //     .decrease_balance(from, &action.fee_asset, 1)
+    //     .await
+    //     .wrap_err("failed decreasing `from` account balance")?;
 
     let nonce = state
         .get_account_nonce(from)
