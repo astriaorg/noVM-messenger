@@ -3,7 +3,14 @@ use astria_eyre::eyre::{ensure, Result, WrapErr as _};
 use cnidarium::{StateRead, StateWrite};
 use rollup_core::transaction::v1::action::Transfer;
 
+use super::AddressBytes;
 use crate::text::{StateReadExt as _, StateWriteExt as _};
+
+#[allow(unused_imports)]
+use crate::{
+    accounts::{StateReadExt as _, StateWriteExt as _},
+    address::{StateReadExt as _, StateReadExt as _},
+};
 
 // #[async_trait::async_trait]
 // impl ActionHandler for Transfer {
@@ -33,13 +40,17 @@ use crate::text::{StateReadExt as _, StateWriteExt as _};
 //     }
 // }
 
-pub(crate) async fn execute_send_text<S>(
+pub(crate) async fn execute_send_text<S, TAddress>(
     action: &rollup_core::transaction::v1::action::SendText,
+    from: &TAddress,
     mut state: S,
 ) -> Result<()>
 where
     S: StateWrite,
+    TAddress: AddressBytes,
 {
+    let from = from.address_bytes();
+
     let last_id = state.get_last_text_id().await.unwrap();
     let last_id: u64 = last_id.into();
     state
@@ -47,5 +58,19 @@ where
         .unwrap();
     state.put_last_text_id(last_id + 1).unwrap();
 
+    // TODO: Implement configurable fees and fee recipients
+    state
+        .decrease_balance(from, &action.fee_asset, 1)
+        .await
+        .wrap_err("failed decreasing `from` account balance")?;
+
+    let nonce = state
+        .get_account_nonce(from)
+        .await
+        .wrap_err("failed to get account nonce")?;
+    let nonce = nonce + 1;
+    state
+        .put_account_nonce(from, nonce)
+        .wrap_err("failed to put account nonce")?;
     Ok(())
 }

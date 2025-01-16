@@ -58,12 +58,12 @@ impl RollupConfig {
     }
 }
 
-const CHAIN_ID: &str = "astria";
+const CHAIN_ID: &str = "astria-chat";
 const FEE_ASSET: &str = "nria";
 const FROM: &str = "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm";
 const SEQUENCER_PRIVATE_KEY: &str =
     "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90";
-const NONCE: u32 = 0;
+// const NONCE: u32 = 0;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SendMessageRequest {
@@ -92,7 +92,7 @@ impl Rollup {
         let addr: SocketAddr = cfg.execution_grpc_addr.parse()?;
         let composer_addr = cfg.composer_addr.clone();
         let rollup_id = RollupId::from_unhashed_bytes(Sha256::digest(cfg.rollup_name.as_bytes()));
-        let warp_rollup_id = warp::any().map(move || rollup_id.clone());
+        let warp_rollup_id = warp::any().map(move || rollup_id);
 
         let composer_client = GrpcCollectorServiceClient::connect(composer_addr.clone())
             .await
@@ -113,6 +113,8 @@ impl Rollup {
             .and(warp::post())
             .and(warp::body::json())
             .and(with_composer(composer_client.clone()))
+            .and(with_storage(storage.clone()))
+            .and(warp_rollup_id)
             .and_then(handle_submit_unsigned_text)
             .with(
                 warp::cors()
@@ -125,6 +127,11 @@ impl Rollup {
             .and(warp::get())
             .and(with_storage(storage.clone()))
             .and_then(handle_get_account_balance);
+
+        let get_account_nonce = warp::path!("get_account_nonce" / String)
+            .and(warp::get())
+            .and(with_storage(storage.clone()))
+            .and_then(handle_get_account_nonce);
 
         let get_text_from_id = warp::path!("get_text_from_id" / u64)
             .and(warp::get())
@@ -141,7 +148,8 @@ impl Rollup {
             .or(get_account_balance)
             .or(get_text_from_id)
             .or(submit_unsigned_message)
-            .or(get_recents);
+            .or(get_recents)
+            .or(get_account_nonce);
 
         // Spawn the server in a separate async task so it doesn't block the main program
         tokio::spawn(async move {
@@ -156,7 +164,7 @@ impl Rollup {
         let mut delta = cnidarium::StateDelta::new(latest_snapshot);
 
         // Set initial state
-        let block = astria_core::generated::astria::execution::v1::Block {
+        let _block = astria_core::generated::astria::execution::v1::Block {
             number: 0,
             parent_block_hash: Bytes::from_static(&[69u8; 32]),
             hash: Bytes::from_static(&[69u8; 32]),
@@ -165,17 +173,14 @@ impl Rollup {
                 nanos: 0,
             }),
         };
-        let block = Block::try_from_raw(block)?;
         let text = "hello world".to_string();
-        let address = Address::from_str("astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm")?;
+        let address = Address::from_str(FROM)?;
         address.to_prefix("astria")?;
         let asset = crate::accounts::state_ext::nria();
         let balance = 2_000_000_000u128;
-
         delta.put_account_balance(&address, &asset, balance)?;
-
         delta.put_text(text, "ido".to_string(), 0).unwrap();
-        delta.put_last_text_id(0).unwrap();
+        delta.put_last_text_id(1).unwrap();
         delta
             .put_commitment_state(0, 0, cfg.celestia_genesis_block_height)
             .unwrap();
@@ -237,12 +242,13 @@ fn with_storage(
     warp::any().map(move || storage.clone())
 }
 
-#[allow(dead_code)]
 async fn handle_submit_transaction(
     mut composer_client: GrpcCollectorServiceClient<tonic::transport::channel::Channel>,
     data: Bytes,
     rollup_id: RollupId,
 ) -> Result<impl warp::Reply, warp::Rejection> {
+    // let snapshot = storage.latest_snapshot();
+    // let delta = cnidarium::StateDelta::new(snapshot);
     info!("received transaction submission request: {:?}", data);
     let raw_transaction = match Transaction::decode(data) {
         Ok(transaction) => transaction,
@@ -252,7 +258,7 @@ async fn handle_submit_transaction(
             )))
         }
     };
-    let rollup_id = RollupId::new([69_u8; 32]); // TODO: get rollup id from config
+
     match composer_client
         .submit_rollup_transaction(SubmitRollupTransactionRequest {
             rollup_id: Some(rollup_id.into_raw()),
@@ -268,7 +274,6 @@ async fn handle_submit_transaction(
     }
 }
 
-#[allow(dead_code)]
 async fn handle_get_account_balance(
     account: String,
     asset: String,
@@ -286,7 +291,6 @@ async fn handle_get_account_balance(
     }
 }
 
-#[allow(dead_code)]
 async fn handle_get_text_from_id(
     id: u64,
     storage: Storage,
@@ -303,19 +307,27 @@ async fn handle_get_text_from_id(
 async fn handle_submit_unsigned_text(
     req: SendMessageRequest,
     mut composer_client: GrpcCollectorServiceClient<tonic::transport::channel::Channel>,
+    storage: Storage,
+    rollup_id: RollupId,
 ) -> Result<impl warp::Reply, warp::Rejection> {
+    let snapshot = storage.latest_snapshot();
+    let delta = cnidarium::StateDelta::new(snapshot);
     let sequencer_key = signing_key_from_private_key(SEQUENCER_PRIVATE_KEY).unwrap();
     let fee_asset = asset::denom::Denom::from_str(FEE_ASSET).unwrap();
     let from_address = address_from_signing_key(&sequencer_key, "astria").unwrap();
     println!("sending tx from address: {from_address}");
-    let rollup_id = RollupId::new([69_u8; 32]);
+    let nonce = match delta.get_account_nonce(&from_address).await {
+        Ok(nonce) => Ok(nonce),
+        Err(_) => Err(warp::reject::reject()),
+    }
+    .unwrap();
     let tx = TransactionBody::builder()
-        .nonce(NONCE)
+        .nonce(nonce)
         .chain_id(CHAIN_ID)
         .actions(vec![Action::Text(SendText {
             text: req.message.clone(),
             from: req.sender.to_string(),
-            fee_asset: fee_asset,
+            fee_asset,
         })])
         .try_build()
         .wrap_err("failed to construct a transaction")
@@ -380,4 +392,19 @@ pub(crate) fn address_from_signing_key(
 
     // Return the generated address
     Ok(from_address)
+}
+
+async fn handle_get_account_nonce(
+    account: String,
+    storage: Storage,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    let snapshot = storage.latest_snapshot();
+    let delta = cnidarium::StateDelta::new(snapshot);
+    match delta
+        .get_account_nonce(&Address::from_str(account.as_str()).unwrap())
+        .await
+    {
+        Ok(nonce) => Ok(warp::reply::json(&nonce.to_string())),
+        Err(_) => Err(warp::reject::reject()),
+    }
 }

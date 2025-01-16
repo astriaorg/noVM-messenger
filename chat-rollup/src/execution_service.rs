@@ -1,29 +1,32 @@
 use crate::accounts::action::execute_transfer;
+use crate::text::action::execute_send_text;
 
+// use crate::accounts::StateWriteExt;
 #[allow(unused_imports)]
 use crate::rollup;
 use crate::rollup::state_ext::{StateReadExt, StateWriteExt};
 use crate::rollup::RollupConfig;
-use crate::text::action::execute_send_text;
 use astria_core::execution::v1::Block;
 
 use astria_core::generated::astria::execution::v1::execution_service_server::ExecutionService;
-use astria_core::generated::astria::execution::v1::{self as execution, ExecuteBlockRequest};
+// use astria_core::generated::astria::execution::v1::{self as execution, ExecuteBlockRequest};
+use astria_core::generated::astria::execution::v1::{self as execution};
 use astria_core::generated::astria::sequencerblock::v1::rollup_data::Value::{
     Deposit, SequencedData,
 };
 use pbjson_types::Timestamp;
 use sha2::{Digest, Sha256};
+// use sha2::Digest;
 
 use astria_core::primitive::v1::RollupId;
 use astria_core::Protobuf as _;
 use bytes::Bytes;
 use cnidarium::{StateDelta, Storage};
 use prost::Message as _;
-use serde::de;
-use std::os::macos::raw;
+// use serde::de;
+// use std::os::macos::raw;
 use std::sync::Arc;
-use tendermint::node::info;
+// use tendermint::node::info;
 use tracing::info;
 
 use tonic::{Request, Response, Status};
@@ -46,7 +49,7 @@ pub(crate) struct RollupExecutionService {
 impl ExecutionService for RollupExecutionService {
     async fn get_genesis_info(
         self: Arc<Self>,
-        request: Request<execution::GetGenesisInfoRequest>,
+        _request: Request<execution::GetGenesisInfoRequest>,
     ) -> Result<Response<execution::GenesisInfo>, Status> {
         let rollup_id =
             RollupId::from_unhashed_bytes(Sha256::digest(self.config.rollup_name.as_bytes()));
@@ -139,9 +142,9 @@ impl ExecutionService for RollupExecutionService {
         let block_height = commitment.soft;
 
         // Execute transactions
-        let mut executed_deposits: Vec<
-            astria_core::generated::astria::sequencerblock::v1::Deposit,
-        > = Vec::new();
+        // let mut executed_deposits: Vec<
+        //     astria_core::generated::astria::sequencerblock::v1::Deposit,
+        // > = Vec::new();
         let mut executed_transaction = Vec::new();
         for tx in transactions {
             let raw_transaction =
@@ -160,7 +163,7 @@ impl ExecutionService for RollupExecutionService {
                             .unwrap();
                     }
                     rollup_core::transaction::v1::Action::Text(send_text) => {
-                        execute_send_text(send_text, &mut state_delta)
+                        execute_send_text(send_text, sender, &mut state_delta)
                             .await
                             .unwrap();
                     }

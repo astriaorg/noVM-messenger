@@ -55,7 +55,14 @@ where
         .increase_balance(&action.to, &action.asset, action.amount)
         .await
         .wrap_err("failed increasing `to` account balance")?;
-
+    let nonce = state
+        .get_account_nonce(from)
+        .await
+        .wrap_err("failed to get account nonce")?;
+    let nonce = nonce + 1;
+    state
+        .put_account_nonce(from, nonce)
+        .wrap_err("failed to put account nonce")?;
     Ok(())
 }
 
