@@ -1,5 +1,30 @@
 # Simple chat rollup 
 
+Rollups on Astria are virtual machine (VM) agnostic, which means that they can
+function without relying on a VM — a concept we refer to as a noVM rollup.
+
+Using Astria's Execution API, developers can build rollups tailored to any
+application type that operates on transactions, messages, and blocks.
+
+This repo contains a simplified noVM messenger rollup app which users can
+interact with using a cli to submit messages and access message history from the
+rollup.
+
+## ⚠️ Development Notice ⚠️
+
+This is an example project intended for demonstration and learning purposes
+only. It is not production-ready and should not be used in a production
+environment.
+
+### Important Notes
+- This code may contain incomplete features
+- Security measures may not be fully implemented
+- Performance optimizations are not included
+- Documentation may be limited
+
+Please use this project only as a reference or starting point for your own implementation.
+
+
 ## Run in a local cluster
 ### preparation
 Clone the repository and then build a local docker image with
