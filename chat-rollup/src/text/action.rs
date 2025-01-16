@@ -58,6 +58,7 @@ where
         .unwrap();
     state.put_last_text_id(last_id + 1).unwrap();
 
+    // TODO: Implement configurable fees and fee recipients
     state
         .decrease_balance(from, &action.fee_asset, 1)
         .await
