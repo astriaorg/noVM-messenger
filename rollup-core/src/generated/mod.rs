@@ -24,4 +24,16 @@ pub mod protocol {
             }
         }
     }
+
+    #[path = ""]
+    pub mod genesis {
+        pub mod v1 {
+            include!("genesis.v1.rs");
+
+            mod _serde_impl {
+                use super::*;
+                include!("genesis.v1.serde.rs");
+            }
+        }
+    }
 }

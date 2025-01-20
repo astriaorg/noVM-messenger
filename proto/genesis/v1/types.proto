@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package genesis.v1;
+
+import "astria/primitive/v1/types.proto";
+import "astria/protocol/fees/v1/types.proto";
+
+message GenesisAppState {
+  string rollup_name = 1;
+  uint32 sequencer_genesis_block_height = 2;
+  uint32 celestia_genesis_block_height = 3;
+  uint64 celestia_block_variance = 4;
+  repeated Account accounts = 5;
+  astria.primitive.v1.Address authority_sudo_address = 6;
+}
+
+message Account {
+  astria.primitive.v1.Address address = 1;
+  astria.primitive.v1.Uint128 balance = 2;
+}

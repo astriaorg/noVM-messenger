@@ -1,0 +1,19 @@
+{
+    "rollup_name": "chat-rollup",
+    "accounts": [
+        {
+            "address": {
+                "bech32m": "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm"
+            },
+            "balance": {
+                "lo": 100000000000000000
+            }
+        }
+    ],
+    "sequencer_genesis_block_height": 2,
+    "celestia_genesis_block_height": 2,
+    "celestia_block_variance": 100,
+    "authority_sudo_address": {
+        "bech32m": "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm"
+    }
+}
