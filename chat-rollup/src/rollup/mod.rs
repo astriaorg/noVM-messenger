@@ -1,6 +1,7 @@
 pub(crate) mod state_ext;
 pub(crate) mod storage;
 use crate::accounts::{StateReadExt as _, StateWriteExt as _};
+use crate::bridge::state_ext::StateWriteExt;
 use crate::config::Config;
 use crate::execution_service;
 use crate::rollup::state_ext::StateWriteExt as RollupStateExt;
@@ -96,6 +97,7 @@ const CHAIN_ID: &str = "astria-chat";
 const FEE_ASSET: &str = "nria";
 const SEQUENCER_PRIVATE_KEY: &str =
     "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90";
+const BRIDGE_ADDRESS: &str = "astria1d7zjjljc0dsmxa545xkpwxym86g8uvvwhtezcr";
 const INITIAL_HASH: [u8; 32] = [69u8; 32];
 const PREFIX: &str = "astria";
 // const NONCE: u32 = 0;
@@ -128,9 +130,9 @@ impl Rollup {
         let genesis_state: GenesisAppState = serde_json::from_str(&file_content)?;
         let addr: SocketAddr = cfg.execution_grpc_addr.parse()?;
         let composer_addr = cfg.composer_addr.clone();
-        let rollup_id = RollupId::from_unhashed_bytes(Sha256::digest(
-            genesis_state.rollup_name.clone().as_bytes(),
-        ));
+        info!("genesis state: {:?}", genesis_state);
+        let rollup_id = RollupId::from_unhashed_bytes(genesis_state.rollup_name.clone());
+        info!("rollup id: {:?}", rollup_id);
         let warp_rollup_id = warp::any().map(move || rollup_id);
 
         let composer_client = GrpcCollectorServiceClient::connect(composer_addr.clone())
@@ -214,6 +216,8 @@ impl Rollup {
                 address.to_prefix(PREFIX)?;
                 delta.put_account_balance(&address, &asset, account.balance.unwrap().into())?;
             }
+            let bridge_address = Address::from_str(BRIDGE_ADDRESS).unwrap();
+            delta.put_bridge_account(&bridge_address).unwrap();
 
             delta.put_text(text, PREFIX.to_string(), 0).unwrap();
             delta.put_last_text_id(1).unwrap();

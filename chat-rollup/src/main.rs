@@ -1,6 +1,7 @@
 pub mod accounts;
 pub mod address;
 pub mod assets;
+pub mod bridge;
 pub mod config;
 pub mod execution_service;
 pub mod rollup;
