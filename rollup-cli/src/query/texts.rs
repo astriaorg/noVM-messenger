@@ -1,10 +1,5 @@
-use astria_core::primitive::v1::{asset, Address};
-use color_eyre::eyre::{self, Ok, WrapErr as _};
-use rollup_core::transaction::v1::{action::Transfer, Action};
-use serde_json::{json, Value};
-use tracing_subscriber::fmt::format::json;
-
-use crate::utils::submit_transaction;
+use color_eyre::eyre::{self, Ok};
+use serde_json::Value;
 
 #[derive(clap::Args, Debug)]
 pub(super) struct Command {

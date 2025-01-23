@@ -62,6 +62,7 @@ fn main() {
         .emit_rerun_if_changed(false)
         .bytes([
             ".transaction",
+            ".genesis",
             ".astria",
             ".celestia",
             ".cosmos",
@@ -94,6 +95,7 @@ fn main() {
         .out_dir(&out_dir)
         .build(&[
             ".transaction",
+            ".genesis",
             ".astria",
             ".astria_vendored",
             ".celestia",
@@ -132,7 +134,7 @@ fn clean_non_astria_code(generated: &mut ContentMap) {
     let mut foreign_file_names: HashSet<_> = generated
         .files
         .keys()
-        .filter(|name| !name.starts_with("transaction"))
+        .filter(|name| !name.starts_with("transaction.") && !name.starts_with("genesis."))
         .cloned()
         .collect();
     // also mask mod.rs because we need are defining it

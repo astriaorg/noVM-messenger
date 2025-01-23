@@ -1,5 +1,4 @@
 pub mod accounts;
-pub mod action_handler;
 pub mod address;
 pub mod assets;
 pub mod config;
