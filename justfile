@@ -1,9 +1,14 @@
+default:
+  @just --list
+
 install-cli:
   cargo install --path ./rollup-cli --locked
 
 compile-protos:
   cargo run --manifest-path tools/protobuf-compiler/Cargo.toml
 
+test-rollup:
+  @./test_rollup.sh
 
 ####################################################
 ## Scripts related to formatting code and linting ##

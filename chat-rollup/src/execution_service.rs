@@ -1,5 +1,5 @@
 use crate::accounts::action::execute_transfer;
-use crate::accounts::StateWriteExt;
+use crate::accounts::{AddressBytes, StateWriteExt};
 use crate::bridge::state_ext::StateReadExt;
 use crate::text::action::execute_send_text;
 
@@ -25,7 +25,7 @@ use cnidarium::{StateDelta, Storage};
 use prost::Message as _;
 use std::str::FromStr;
 use std::sync::Arc;
-use tracing::debug;
+use tracing::{debug, info, warn};
 
 use tonic::{Request, Response, Status};
 use tracing::error;
@@ -123,6 +123,12 @@ impl ExecutionService for RollupExecutionService {
         self: Arc<Self>,
         request: Request<execution::ExecuteBlockRequest>,
     ) -> Result<Response<execution::Block>, Status> {
+        warn!("execute_block");
+        warn!("execute_block");
+        warn!("execute_block");
+        warn!("execute_block");
+        warn!("execute_block");
+
         let request = request.into_inner();
         let timestamp = request.timestamp.unwrap();
         let mut transactions: Vec<Bytes> = Vec::new();
@@ -144,6 +150,8 @@ impl ExecutionService for RollupExecutionService {
         let block_height = commitment.soft;
 
         // Execute transactions
+        warn!("-----deposits-----: {:?}", deposits.len());
+
         let mut executed_deposits: Vec<
             astria_core::generated::astria::sequencerblock::v1::Deposit,
         > = Vec::new();
@@ -167,6 +175,10 @@ impl ExecutionService for RollupExecutionService {
                     continue;
                 }
             };
+            info!(
+                address = deposit_address.display_address().to_string(),
+                "deposit detected",
+            );
 
             if state_delta
                 .is_bridge(&deposit.bridge_address)
@@ -174,12 +186,14 @@ impl ExecutionService for RollupExecutionService {
                 .unwrap()
             {
                 state_delta
-                    .increase_balance(&deposit_address, &deposit.asset, deposit.amount.into())
+                    .increase_balance(&deposit_address, &deposit.asset, deposit.amount)
                     .await
                     .unwrap();
                 executed_deposits.push(raw_deposit.clone());
             }
         }
+        warn!("-----txs-----: {:?}", transactions.len());
+
         let mut executed_transaction = Vec::new();
         for tx in transactions {
             // fn try_execute_transaction

@@ -10,6 +10,11 @@
             }
         }
     ],
+    "bridge_accounts": [
+        {
+            "bech32m": "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm"
+        }
+    ],
     "sequencer_genesis_block_height": 2,
     "celestia_genesis_block_height": 2,
     "celestia_block_variance": 100,
