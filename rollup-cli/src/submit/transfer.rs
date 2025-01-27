@@ -46,7 +46,7 @@ pub(super) struct Command {
 impl Command {
     pub(super) async fn run(self) -> eyre::Result<()> {
         let res = submit_transaction(
-            &self.rollup_url.as_str(),
+            self.rollup_url.as_str(),
             self.chain_id.clone(),
             &self.prefix,
             self.private_key.as_str(),

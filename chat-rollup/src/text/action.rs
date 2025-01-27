@@ -11,6 +11,7 @@ use crate::{
     accounts::{StateReadExt as _, StateWriteExt as _},
     address::{StateReadExt as _, StateReadExt as _},
 };
+use tracing::warn;
 
 // #[async_trait::async_trait]
 // impl ActionHandler for Transfer {
@@ -49,6 +50,11 @@ where
     S: StateWrite,
     TAddress: AddressBytes,
 {
+    warn!("execute_send_text");
+    warn!("execute_send_text");
+    warn!("execute_send_text");
+    warn!("execute_send_text");
+    warn!("execute_send_text");
     let from = from.address_bytes();
 
     let last_id = state.get_last_text_id().await.unwrap();

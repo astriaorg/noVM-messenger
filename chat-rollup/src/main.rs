@@ -63,11 +63,11 @@ async fn main() -> ExitCode {
 
     return match Rollup::run_until_stopped(cfg).await {
         Ok(()) => {
-            info!("composer stopped");
+            info!("rollup stopped");
             ExitCode::SUCCESS
         }
         Err(error) => {
-            error!(%error, "Composer exited with error");
+            error!(%error, "rollup exited with error");
             ExitCode::FAILURE
         }
     };

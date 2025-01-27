@@ -28,7 +28,10 @@ impl<'de> serde::Deserialize<'de> for Account {
     where
         D: serde::Deserializer<'de>,
     {
-        const FIELDS: &[&str] = &["address", "balance"];
+        const FIELDS: &[&str] = &[
+            "address",
+            "balance",
+        ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
@@ -45,10 +48,7 @@ impl<'de> serde::Deserialize<'de> for Account {
                 impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
                     type Value = GeneratedField;
 
-                    fn expecting(
-                        &self,
-                        formatter: &mut std::fmt::Formatter<'_>,
-                    ) -> std::fmt::Result {
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                         write!(formatter, "expected one of: {:?}", &FIELDS)
                     }
 
@@ -76,8 +76,8 @@ impl<'de> serde::Deserialize<'de> for Account {
             }
 
             fn visit_map<V>(self, mut map_: V) -> std::result::Result<Account, V::Error>
-            where
-                V: serde::de::MapAccess<'de>,
+                where
+                    V: serde::de::MapAccess<'de>,
             {
                 let mut address__ = None;
                 let mut balance__ = None;
@@ -129,6 +129,9 @@ impl serde::Serialize for GenesisAppState {
         if !self.accounts.is_empty() {
             len += 1;
         }
+        if !self.bridge_accounts.is_empty() {
+            len += 1;
+        }
         if self.authority_sudo_address.is_some() {
             len += 1;
         }
@@ -137,26 +140,20 @@ impl serde::Serialize for GenesisAppState {
             struct_ser.serialize_field("rollupName", &self.rollup_name)?;
         }
         if self.sequencer_genesis_block_height != 0 {
-            struct_ser.serialize_field(
-                "sequencerGenesisBlockHeight",
-                &self.sequencer_genesis_block_height,
-            )?;
+            struct_ser.serialize_field("sequencerGenesisBlockHeight", &self.sequencer_genesis_block_height)?;
         }
         if self.celestia_genesis_block_height != 0 {
-            struct_ser.serialize_field(
-                "celestiaGenesisBlockHeight",
-                &self.celestia_genesis_block_height,
-            )?;
+            struct_ser.serialize_field("celestiaGenesisBlockHeight", &self.celestia_genesis_block_height)?;
         }
         if self.celestia_block_variance != 0 {
             #[allow(clippy::needless_borrow)]
-            struct_ser.serialize_field(
-                "celestiaBlockVariance",
-                ToString::to_string(&self.celestia_block_variance).as_str(),
-            )?;
+            struct_ser.serialize_field("celestiaBlockVariance", ToString::to_string(&self.celestia_block_variance).as_str())?;
         }
         if !self.accounts.is_empty() {
             struct_ser.serialize_field("accounts", &self.accounts)?;
+        }
+        if !self.bridge_accounts.is_empty() {
+            struct_ser.serialize_field("bridgeAccounts", &self.bridge_accounts)?;
         }
         if let Some(v) = self.authority_sudo_address.as_ref() {
             struct_ser.serialize_field("authoritySudoAddress", v)?;
@@ -180,6 +177,8 @@ impl<'de> serde::Deserialize<'de> for GenesisAppState {
             "celestia_block_variance",
             "celestiaBlockVariance",
             "accounts",
+            "bridge_accounts",
+            "bridgeAccounts",
             "authority_sudo_address",
             "authoritySudoAddress",
         ];
@@ -191,6 +190,7 @@ impl<'de> serde::Deserialize<'de> for GenesisAppState {
             CelestiaGenesisBlockHeight,
             CelestiaBlockVariance,
             Accounts,
+            BridgeAccounts,
             AuthoritySudoAddress,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
@@ -203,10 +203,7 @@ impl<'de> serde::Deserialize<'de> for GenesisAppState {
                 impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
                     type Value = GeneratedField;
 
-                    fn expecting(
-                        &self,
-                        formatter: &mut std::fmt::Formatter<'_>,
-                    ) -> std::fmt::Result {
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                         write!(formatter, "expected one of: {:?}", &FIELDS)
                     }
 
@@ -217,19 +214,12 @@ impl<'de> serde::Deserialize<'de> for GenesisAppState {
                     {
                         match value {
                             "rollupName" | "rollup_name" => Ok(GeneratedField::RollupName),
-                            "sequencerGenesisBlockHeight" | "sequencer_genesis_block_height" => {
-                                Ok(GeneratedField::SequencerGenesisBlockHeight)
-                            }
-                            "celestiaGenesisBlockHeight" | "celestia_genesis_block_height" => {
-                                Ok(GeneratedField::CelestiaGenesisBlockHeight)
-                            }
-                            "celestiaBlockVariance" | "celestia_block_variance" => {
-                                Ok(GeneratedField::CelestiaBlockVariance)
-                            }
+                            "sequencerGenesisBlockHeight" | "sequencer_genesis_block_height" => Ok(GeneratedField::SequencerGenesisBlockHeight),
+                            "celestiaGenesisBlockHeight" | "celestia_genesis_block_height" => Ok(GeneratedField::CelestiaGenesisBlockHeight),
+                            "celestiaBlockVariance" | "celestia_block_variance" => Ok(GeneratedField::CelestiaBlockVariance),
                             "accounts" => Ok(GeneratedField::Accounts),
-                            "authoritySudoAddress" | "authority_sudo_address" => {
-                                Ok(GeneratedField::AuthoritySudoAddress)
-                            }
+                            "bridgeAccounts" | "bridge_accounts" => Ok(GeneratedField::BridgeAccounts),
+                            "authoritySudoAddress" | "authority_sudo_address" => Ok(GeneratedField::AuthoritySudoAddress),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -246,14 +236,15 @@ impl<'de> serde::Deserialize<'de> for GenesisAppState {
             }
 
             fn visit_map<V>(self, mut map_: V) -> std::result::Result<GenesisAppState, V::Error>
-            where
-                V: serde::de::MapAccess<'de>,
+                where
+                    V: serde::de::MapAccess<'de>,
             {
                 let mut rollup_name__ = None;
                 let mut sequencer_genesis_block_height__ = None;
                 let mut celestia_genesis_block_height__ = None;
                 let mut celestia_block_variance__ = None;
                 let mut accounts__ = None;
+                let mut bridge_accounts__ = None;
                 let mut authority_sudo_address__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
@@ -265,36 +256,27 @@ impl<'de> serde::Deserialize<'de> for GenesisAppState {
                         }
                         GeneratedField::SequencerGenesisBlockHeight => {
                             if sequencer_genesis_block_height__.is_some() {
-                                return Err(serde::de::Error::duplicate_field(
-                                    "sequencerGenesisBlockHeight",
-                                ));
+                                return Err(serde::de::Error::duplicate_field("sequencerGenesisBlockHeight"));
                             }
-                            sequencer_genesis_block_height__ = Some(
-                                map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?
-                                    .0,
-                            );
+                            sequencer_genesis_block_height__ = 
+                                Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
+                            ;
                         }
                         GeneratedField::CelestiaGenesisBlockHeight => {
                             if celestia_genesis_block_height__.is_some() {
-                                return Err(serde::de::Error::duplicate_field(
-                                    "celestiaGenesisBlockHeight",
-                                ));
+                                return Err(serde::de::Error::duplicate_field("celestiaGenesisBlockHeight"));
                             }
-                            celestia_genesis_block_height__ = Some(
-                                map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?
-                                    .0,
-                            );
+                            celestia_genesis_block_height__ = 
+                                Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
+                            ;
                         }
                         GeneratedField::CelestiaBlockVariance => {
                             if celestia_block_variance__.is_some() {
-                                return Err(serde::de::Error::duplicate_field(
-                                    "celestiaBlockVariance",
-                                ));
+                                return Err(serde::de::Error::duplicate_field("celestiaBlockVariance"));
                             }
-                            celestia_block_variance__ = Some(
-                                map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?
-                                    .0,
-                            );
+                            celestia_block_variance__ = 
+                                Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
+                            ;
                         }
                         GeneratedField::Accounts => {
                             if accounts__.is_some() {
@@ -302,11 +284,15 @@ impl<'de> serde::Deserialize<'de> for GenesisAppState {
                             }
                             accounts__ = Some(map_.next_value()?);
                         }
+                        GeneratedField::BridgeAccounts => {
+                            if bridge_accounts__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("bridgeAccounts"));
+                            }
+                            bridge_accounts__ = Some(map_.next_value()?);
+                        }
                         GeneratedField::AuthoritySudoAddress => {
                             if authority_sudo_address__.is_some() {
-                                return Err(serde::de::Error::duplicate_field(
-                                    "authoritySudoAddress",
-                                ));
+                                return Err(serde::de::Error::duplicate_field("authoritySudoAddress"));
                             }
                             authority_sudo_address__ = map_.next_value()?;
                         }
@@ -314,12 +300,11 @@ impl<'de> serde::Deserialize<'de> for GenesisAppState {
                 }
                 Ok(GenesisAppState {
                     rollup_name: rollup_name__.unwrap_or_default(),
-                    sequencer_genesis_block_height: sequencer_genesis_block_height__
-                        .unwrap_or_default(),
-                    celestia_genesis_block_height: celestia_genesis_block_height__
-                        .unwrap_or_default(),
+                    sequencer_genesis_block_height: sequencer_genesis_block_height__.unwrap_or_default(),
+                    celestia_genesis_block_height: celestia_genesis_block_height__.unwrap_or_default(),
                     celestia_block_variance: celestia_block_variance__.unwrap_or_default(),
                     accounts: accounts__.unwrap_or_default(),
+                    bridge_accounts: bridge_accounts__.unwrap_or_default(),
                     authority_sudo_address: authority_sudo_address__,
                 })
             }

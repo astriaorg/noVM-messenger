@@ -12,7 +12,10 @@ pub struct GenesisAppState {
     pub celestia_block_variance: u64,
     #[prost(message, repeated, tag = "5")]
     pub accounts: ::prost::alloc::vec::Vec<Account>,
-    #[prost(message, optional, tag = "6")]
+    #[prost(message, repeated, tag = "6")]
+    pub bridge_accounts:
+        ::prost::alloc::vec::Vec<astria_core::generated::astria::primitive::v1::Address>,
+    #[prost(message, optional, tag = "7")]
     pub authority_sudo_address:
         ::core::option::Option<astria_core::generated::astria::primitive::v1::Address>,
 }
