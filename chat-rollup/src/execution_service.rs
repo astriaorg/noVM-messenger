@@ -179,6 +179,10 @@ impl ExecutionService for RollupExecutionService {
                 address = deposit_address.display_address().to_string(),
                 "deposit detected",
             );
+            info!(
+                bridge_address = deposit.bridge_address.display_address().to_string(),
+                "bridge address"
+            );
 
             if state_delta
                 .is_bridge(&deposit.bridge_address)
