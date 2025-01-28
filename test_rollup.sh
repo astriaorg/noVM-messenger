@@ -38,7 +38,7 @@ rollup-cli query texts --rollup-url $ROLLUP_URL
 
 echo " == Sending Deposit =="
 
-rollup-cli query balance --rollup-url $ROLLUP_URL $BOB_ADDRESS
+rollup-cli query balance --rollup-url $ROLLUP_URL --asset ntia $BOB_ADDRESS
 
 
 echo " -- Transfer -- "
@@ -46,16 +46,20 @@ astria-cli sequencer transfer --amount 50 \
     --private-key $PRIV_KEY  \
     --sequencer.chain-id sequencer-test-chain-0 \
     --sequencer-url $SEQUENCER_URL \
-    --fee-asset=nria \
-    --asset=nria \
+    --fee-asset=ntia \
+    --asset=ntia \
     $CAROL_ADDRESS
 
 sleep 5
 
+astria-cli sequencer balance get --sequencer-url $SEQUENCER_URL $CAROL_ADDRESS
+
 echo " -- Init Bridge Account -- "
 astria-cli sequencer init-bridge-account --private-key $CAROL_PRIV_KEY --sequencer-url $SEQUENCER_URL \
     --sequencer.chain-id sequencer-test-chain-0 \
-    --rollup-name astria-chat
+    --rollup-name astria-chat \
+    --asset ntia \
+    --fee-asset ntia
 
 sleep 5
 
@@ -66,8 +70,8 @@ astria-cli sequencer bridge-lock $CAROL_ADDRESS \
     --private-key $PRIV_KEY  \
     --sequencer.chain-id sequencer-test-chain-0 \
     --sequencer-url $SEQUENCER_URL \
-    --fee-asset=nria \
-    --asset=nria
+    --fee-asset=ntia \
+    --asset=ntia
 
 sleep 5
-rollup-cli query balance --rollup-url $ROLLUP_URL $BOB_ADDRESS
+rollup-cli query balance --rollup-url $ROLLUP_URL --asset ntia $BOB_ADDRESS
