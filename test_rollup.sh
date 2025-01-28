@@ -29,14 +29,30 @@ BOB_PRIV_KEY=b70fd3b99cab2d98dbd73602deb026b9cdc9bb7b85d35f0bbb81b17c78923dd0
 ROLLUP_BRIDGE_ADDRESS=astria1f6yydwp23ucl6kfxt2gqt9vufgpsl3zvz5hwxk
 CAROL_ADDRESS=astria1f6yydwp23ucl6kfxt2gqt9vufgpsl3zvz5hwxk
 CAROL_PRIV_KEY=0e951afdcbefc420fe6f71b82b0c28c11eb6ee5d95be0886ce9dbf6fa512debc
-echo "Sending Messages"
+
+echo " == Sending Test Message == "
 
 rollup-cli query texts --rollup-url $ROLLUP_URL
 rollup-cli submit text --private-key $PRIV_KEY --rollup-url $ROLLUP_URL "hi" "alice"
 sleep 5
 rollup-cli query texts --rollup-url $ROLLUP_URL
 
-echo " == Sending Deposit =="
+echo
+echo " == Sending Rollup Transfer == "
+
+rollup-cli query balance --rollup-url $ROLLUP_URL --asset nria $BOB_ADDRESS
+rollup-cli submit transfer --amount 10 \
+    --private-key $BRIDGE_PRIV_KEY \
+    --rollup-url $ROLLUP_URL \
+    --chain-id astria-chat \
+    --asset nria \
+    --fee-asset nria \
+    $BOB_ADDRESS
+sleep 5
+rollup-cli query balance --rollup-url $ROLLUP_URL --asset nria $BOB_ADDRESS
+
+echo
+echo " == Sending Deposit == "
 
 rollup-cli query balance --rollup-url $ROLLUP_URL --asset ntia $BOB_ADDRESS
 
@@ -75,3 +91,5 @@ astria-cli sequencer bridge-lock $CAROL_ADDRESS \
 
 sleep 5
 rollup-cli query balance --rollup-url $ROLLUP_URL --asset ntia $BOB_ADDRESS
+
+echo

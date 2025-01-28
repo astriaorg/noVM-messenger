@@ -25,7 +25,7 @@ use cnidarium::{StateDelta, Storage};
 use prost::Message as _;
 use std::str::FromStr;
 use std::sync::Arc;
-use tracing::{debug, info, warn};
+use tracing::debug;
 
 use tonic::{Request, Response, Status};
 use tracing::error;
@@ -123,12 +123,7 @@ impl ExecutionService for RollupExecutionService {
         self: Arc<Self>,
         request: Request<execution::ExecuteBlockRequest>,
     ) -> Result<Response<execution::Block>, Status> {
-        warn!("execute_block");
-        warn!("execute_block");
-        warn!("execute_block");
-        warn!("execute_block");
-        warn!("execute_block");
-
+        debug!("executing block");
         let request = request.into_inner();
         let timestamp = request.timestamp.unwrap();
         let mut transactions: Vec<Bytes> = Vec::new();
@@ -150,8 +145,7 @@ impl ExecutionService for RollupExecutionService {
         let block_height = commitment.soft;
 
         // Execute transactions
-        warn!("-----deposits-----: {:?}", deposits.len());
-
+        debug!("number of deposits detected: {:?}", deposits.len());
         let mut executed_deposits: Vec<
             astria_core::generated::astria::sequencerblock::v1::Deposit,
         > = Vec::new();
@@ -175,13 +169,9 @@ impl ExecutionService for RollupExecutionService {
                     continue;
                 }
             };
-            info!(
-                address = deposit_address.display_address().to_string(),
-                "deposit detected",
-            );
-            info!(
+            debug!(
+                deposit_address = deposit_address.display_address().to_string(),
                 bridge_address = deposit.bridge_address.display_address().to_string(),
-                "bridge address"
             );
 
             if state_delta
@@ -196,8 +186,8 @@ impl ExecutionService for RollupExecutionService {
                 executed_deposits.push(raw_deposit.clone());
             }
         }
-        warn!("-----txs-----: {:?}", transactions.len());
 
+        debug!("number of transactions detected: {:?}", transactions.len());
         let mut executed_transaction = Vec::new();
         for tx in transactions {
             // fn try_execute_transaction
