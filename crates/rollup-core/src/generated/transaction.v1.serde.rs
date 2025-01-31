@@ -43,6 +43,7 @@ impl<'de> serde::Deserialize<'de> for Action {
             {
                 struct GeneratedVisitor;
 
+                #[allow(clippy::needless_lifetimes)]
                 impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
                     type Value = GeneratedField;
 
@@ -69,6 +70,7 @@ impl<'de> serde::Deserialize<'de> for Action {
             }
         }
         struct GeneratedVisitor;
+        #[allow(clippy::needless_lifetimes)]
         impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
             type Value = Action;
 
@@ -158,6 +160,7 @@ impl<'de> serde::Deserialize<'de> for SendText {
             {
                 struct GeneratedVisitor;
 
+                #[allow(clippy::needless_lifetimes)]
                 impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
                     type Value = GeneratedField;
 
@@ -185,6 +188,7 @@ impl<'de> serde::Deserialize<'de> for SendText {
             }
         }
         struct GeneratedVisitor;
+        #[allow(clippy::needless_lifetimes)]
         impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
             type Value = SendText;
 
@@ -290,6 +294,7 @@ impl<'de> serde::Deserialize<'de> for Transaction {
             {
                 struct GeneratedVisitor;
 
+                #[allow(clippy::needless_lifetimes)]
                 impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
                     type Value = GeneratedField;
 
@@ -317,6 +322,7 @@ impl<'de> serde::Deserialize<'de> for Transaction {
             }
         }
         struct GeneratedVisitor;
+        #[allow(clippy::needless_lifetimes)]
         impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
             type Value = Transaction;
 
@@ -413,6 +419,7 @@ impl<'de> serde::Deserialize<'de> for TransactionBody {
             {
                 struct GeneratedVisitor;
 
+                #[allow(clippy::needless_lifetimes)]
                 impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
                     type Value = GeneratedField;
 
@@ -439,6 +446,7 @@ impl<'de> serde::Deserialize<'de> for TransactionBody {
             }
         }
         struct GeneratedVisitor;
+        #[allow(clippy::needless_lifetimes)]
         impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
             type Value = TransactionBody;
 
@@ -522,6 +530,7 @@ impl<'de> serde::Deserialize<'de> for TransactionParams {
             {
                 struct GeneratedVisitor;
 
+                #[allow(clippy::needless_lifetimes)]
                 impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
                     type Value = GeneratedField;
 
@@ -548,6 +557,7 @@ impl<'de> serde::Deserialize<'de> for TransactionParams {
             }
         }
         struct GeneratedVisitor;
+        #[allow(clippy::needless_lifetimes)]
         impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
             type Value = TransactionParams;
 
@@ -651,6 +661,7 @@ impl<'de> serde::Deserialize<'de> for Transfer {
             {
                 struct GeneratedVisitor;
 
+                #[allow(clippy::needless_lifetimes)]
                 impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
                     type Value = GeneratedField;
 
@@ -679,6 +690,7 @@ impl<'de> serde::Deserialize<'de> for Transfer {
             }
         }
         struct GeneratedVisitor;
+        #[allow(clippy::needless_lifetimes)]
         impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
             type Value = Transfer;
 

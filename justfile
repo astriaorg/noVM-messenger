@@ -1,14 +1,44 @@
+mod? argo 'dev/argo.just'
+mod? helm 'dev/helm.just'
+
+# Print this list
 default:
   @just --list
 
+# Build and install the rollup CLI
 install-cli:
-  cargo install --path ./rollup-cli --locked
+  cargo install --path ./crates/rollup-cli --locked
 
 compile-protos:
   cargo run --manifest-path tools/protobuf-compiler/Cargo.toml
 
 test-rollup:
   @./test_rollup.sh
+
+default_docker_tag := 'local'
+default_repo_name := 'ghcr.io/astriaorg'
+
+# Builds docker image for the crate. Defaults to 'local' tag.
+# NOTE: `_crate_short_name` is invoked as dependency of this command so that failure to pass a valid
+# binary will produce a meaningful error message.
+docker-build crate tag=default_docker_tag repo_name=default_repo_name: (_crate_short_name crate "quiet")
+  #!/usr/bin/env sh
+  set -eu
+  short_name=$(just _crate_short_name {{crate}})
+  set -x
+  docker buildx build --load --build-arg TARGETBINARY={{crate}} -f containerfiles/Dockerfile -t {{repo_name}}/$short_name:{{tag}} .
+
+# Maps a crate name to the shortened name used in the docker tag.
+# If `quiet` is an empty string the shortened name will be echoed. If `quiet` is a non-empty string,
+# the only output will be in the case of an error, where the input `crate` is not a valid one.
+_crate_short_name crate quiet="":
+  #!/usr/bin/env sh
+  set -eu
+  case {{crate}} in
+    chat-rollup) short_name=chat-rollup ;;
+    *) echo "{{crate}} is not a supported binary" && exit 2
+  esac
+  [ -z {{quiet}} ] && echo $short_name || true
 
 ####################################################
 ## Scripts related to formatting code and linting ##

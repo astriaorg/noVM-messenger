@@ -29,7 +29,7 @@ Please use this project only as a reference or starting point for your own imple
 ### preparation
 Clone the repository and then build a local docker image with
 ```sh
-docker buildx build --load --build-arg up -f ./Dockerfile -t chat-rollup:local-v0.0.1
+just docker-build chat-rollup
 ```
 In a differnet terminal open the astria monorepo [chat-rollup chart branch](https://github.com/astriaorg/astria/tree/quasystaty1/chat-rollup/oracle-chart-connection) which will be used to deploy the chat rollup on astria local dev cluster.
 
