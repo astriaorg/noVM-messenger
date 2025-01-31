@@ -1,6 +1,7 @@
 pub(crate) mod state_ext;
 pub(crate) mod storage;
 use crate::accounts::{StateReadExt as _, StateWriteExt as _};
+use crate::bridge::state_ext::StateWriteExt;
 use crate::config::Config;
 use crate::execution_service;
 use crate::rollup::state_ext::StateWriteExt as RollupStateExt;
@@ -27,7 +28,6 @@ use rollup_core::generated::protocol::transaction::v1::Transaction;
 use rollup_core::transaction::v1::action::SendText;
 use rollup_core::transaction::v1::{Action, TransactionBody};
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use state_ext::StateReadExt;
 use std::fs::{self, File};
 use std::io::BufReader;
@@ -96,9 +96,10 @@ const CHAIN_ID: &str = "astria-chat";
 const FEE_ASSET: &str = "nria";
 const SEQUENCER_PRIVATE_KEY: &str =
     "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90";
+// const BRIDGE_ADDRESS: &str = "astria1d7zjjljc0dsmxa545xkpwxym86g8uvvwhtezcr";
 const INITIAL_HASH: [u8; 32] = [69u8; 32];
 const PREFIX: &str = "astria";
-// const NONCE: u32 = 0;
+const ROLLUP_PORT: u16 = 3030;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SendMessageRequest {
@@ -125,12 +126,13 @@ impl warp::reject::Reject for RestError {}
 impl Rollup {
     pub async fn run_until_stopped(cfg: Config) -> Result<()> {
         let file_content = fs::read_to_string(cfg.clone().genesis_filepath)?;
-        let genesis_state: GenesisAppState = serde_json::from_str(&file_content)?;
+        let genesis_state: GenesisAppState =
+            serde_json::from_str(&file_content).wrap_err("failed to parse genesis json")?;
         let addr: SocketAddr = cfg.execution_grpc_addr.parse()?;
         let composer_addr = cfg.composer_addr.clone();
-        let rollup_id = RollupId::from_unhashed_bytes(Sha256::digest(
-            genesis_state.rollup_name.clone().as_bytes(),
-        ));
+        info!("genesis state: {:?}", genesis_state);
+        let rollup_id = RollupId::from_unhashed_bytes(genesis_state.rollup_name.clone());
+        info!("rollup id: {:?}", rollup_id);
         let warp_rollup_id = warp::any().map(move || rollup_id);
 
         let composer_client = GrpcCollectorServiceClient::connect(composer_addr.clone())
@@ -192,7 +194,7 @@ impl Rollup {
 
         // Spawn the server in a separate async task so it doesn't block the main program
         tokio::spawn(async move {
-            warp::serve(routes).run(([0, 0, 0, 0], 3030)).await;
+            warp::serve(routes).run(([0, 0, 0, 0], ROLLUP_PORT)).await;
         });
 
         let snapshot_service = Snapshot;
@@ -213,6 +215,12 @@ impl Rollup {
                     Address::from_str(&account.address.unwrap().bech32m).unwrap();
                 address.to_prefix(PREFIX)?;
                 delta.put_account_balance(&address, &asset, account.balance.unwrap().into())?;
+            }
+            for bridge_account in genesis_state.bridge_accounts.clone() {
+                let bridge_address: Address =
+                    Address::from_str(bridge_account.bech32m.as_str()).unwrap();
+                bridge_address.to_prefix(PREFIX)?;
+                delta.put_bridge_account(&bridge_address).unwrap();
             }
 
             delta.put_text(text, PREFIX.to_string(), 0).unwrap();

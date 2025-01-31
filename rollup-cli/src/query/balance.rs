@@ -37,7 +37,7 @@ impl Command {
 
         match response.text().await {
             Ok(balance) => {
-                println!("Balance: {}", balance);
+                println!("Balance: {}{}", balance, self.asset);
                 Ok(())
             }
             Err(e) => Err(eyre::eyre!(e)),

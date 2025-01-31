@@ -18,6 +18,7 @@ pub struct GenesisAppState {
     celestia_genesis_block_height: u32,
     celestia_block_variance: u64,
     accounts: Vec<Account>,
+    bridge_accounts: Vec<Address>,
     authority_sudo_address: astria_core::primitive::v1::Address,
 }
 
@@ -25,6 +26,11 @@ impl GenesisAppState {
     #[must_use]
     pub fn accounts(&self) -> &[Account] {
         &self.accounts
+    }
+
+    #[must_use]
+    pub fn bridge_accounts(&self) -> &[Address] {
+        &self.bridge_accounts
     }
 
     #[must_use]
@@ -58,14 +64,15 @@ impl Protobuf for GenesisAppState {
     type Raw = raw::GenesisAppState;
 
     // TODO (https://github.com/astriaorg/astria/issues/1580): remove this once Rust is upgraded to/past 1.83
-    #[expect(
-        clippy::allow_attributes,
-        clippy::allow_attributes_without_reason,
-        reason = "false positive on `allowed_fee_assets` due to \"allow\" in the name"
-    )]
+    // #[expect(
+    //     // clippy::allow_attributes,
+    //     // clippy::allow_attributes_without_reason,
+    //     reason = "false positive on `allowed_fee_assets` due to \"allow\" in the name"
+    // )]
     fn try_from_raw_ref(raw: &Self::Raw) -> Result<Self, Self::Error> {
         let Self::Raw {
             accounts,
+            bridge_accounts,
             authority_sudo_address,
             rollup_name,
             sequencer_genesis_block_height,
@@ -78,6 +85,12 @@ impl Protobuf for GenesisAppState {
             .collect::<Result<Vec<_>, _>>()
             .map_err(Self::Error::accounts)?;
 
+        let bridge_accounts = bridge_accounts
+            .iter()
+            .map(Address::try_from_raw_ref)
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(Self::Error::authority_sudo_address)?;
+
         let authority_sudo_address = authority_sudo_address
             .as_ref()
             .ok_or_else(|| Self::Error::field_not_set("authority_sudo_address"))
@@ -87,6 +100,7 @@ impl Protobuf for GenesisAppState {
 
         let this = Self {
             accounts,
+            bridge_accounts,
             authority_sudo_address,
             rollup_name: rollup_name.clone(),
             sequencer_genesis_block_height: *sequencer_genesis_block_height,
@@ -99,6 +113,7 @@ impl Protobuf for GenesisAppState {
     fn to_raw(&self) -> Self::Raw {
         let Self {
             accounts,
+            bridge_accounts,
             authority_sudo_address,
             rollup_name,
             sequencer_genesis_block_height,
@@ -107,6 +122,7 @@ impl Protobuf for GenesisAppState {
         } = self;
         Self::Raw {
             accounts: accounts.iter().map(Account::to_raw).collect(),
+            bridge_accounts: bridge_accounts.iter().map(Address::to_raw).collect(),
             authority_sudo_address: Some(authority_sudo_address.to_raw()),
             rollup_name: rollup_name.clone(),
             sequencer_genesis_block_height: *sequencer_genesis_block_height,
@@ -261,6 +277,7 @@ mod tests {
                     balance: Some(1_000_000_000_000_000_000.into()),
                 },
             ],
+            bridge_accounts: vec![], // TODO: add bridge accounts
             authority_sudo_address: Some(alice().to_raw()),
             rollup_name: "astria-1".to_string(),
             sequencer_genesis_block_height: 0,

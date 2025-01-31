@@ -1,41 +1,45 @@
 use crate::accounts::action::execute_transfer;
+use crate::accounts::{AddressBytes, StateWriteExt};
+use crate::bridge::state_ext::StateReadExt;
 use crate::text::action::execute_send_text;
 
 // use crate::accounts::StateWriteExt;
 #[allow(unused_imports)]
 use crate::rollup;
-use crate::rollup::state_ext::{StateReadExt, StateWriteExt};
+use crate::rollup::state_ext::{StateReadExt as _, StateWriteExt as _};
 use crate::rollup::RollupConfig;
 use astria_core::execution::v1::Block;
 
 use astria_core::generated::astria::execution::v1::execution_service_server::ExecutionService;
-// use astria_core::generated::astria::execution::v1::{self as execution, ExecuteBlockRequest};
 use astria_core::generated::astria::execution::v1::{self as execution};
 use astria_core::generated::astria::sequencerblock::v1::rollup_data::Value::{
     Deposit, SequencedData,
 };
 use pbjson_types::Timestamp;
-use sha2::{Digest, Sha256};
-// use sha2::Digest;
+use sha2::Digest;
 
 use astria_core::primitive::v1::RollupId;
 use astria_core::Protobuf as _;
 use bytes::Bytes;
 use cnidarium::{StateDelta, Storage};
 use prost::Message as _;
-// use serde::de;
-// use std::os::macos::raw;
+use std::str::FromStr;
 use std::sync::Arc;
-// use tendermint::node::info;
-use tracing::info;
+use tracing::debug;
 
 use tonic::{Request, Response, Status};
 use tracing::error;
 
-fn compute_block_hash(prev_block_hash: &[u8], merkle_root: &[u8], timestamp: Timestamp) -> Vec<u8> {
+fn compute_block_hash(
+    prev_block_hash: &[u8],
+    tx_merkle_root: &[u8],
+    deposit_merkle_root: &[u8],
+    timestamp: Timestamp,
+) -> Vec<u8> {
     let mut hasher = sha2::Sha256::new();
     hasher.update(prev_block_hash);
-    hasher.update(merkle_root);
+    hasher.update(tx_merkle_root);
+    hasher.update(deposit_merkle_root);
     hasher.update(timestamp.encode_to_vec());
     hasher.finalize().to_vec()
 }
@@ -51,8 +55,7 @@ impl ExecutionService for RollupExecutionService {
         self: Arc<Self>,
         _request: Request<execution::GetGenesisInfoRequest>,
     ) -> Result<Response<execution::GenesisInfo>, Status> {
-        let rollup_id =
-            RollupId::from_unhashed_bytes(Sha256::digest(self.config.rollup_name.as_bytes()));
+        let rollup_id = RollupId::from_unhashed_bytes(self.config.rollup_name.clone());
         let genesis_info = execution::GenesisInfo {
             rollup_id: Some(rollup_id.into_raw()),
             sequencer_genesis_block_height: self.config.sequencer_genesis_block_height,
@@ -73,7 +76,6 @@ impl ExecutionService for RollupExecutionService {
                 Some(id) => match id {
                     execution::block_identifier::Identifier::BlockNumber(height) => {
                         let block = state_delta.get_block(height).await.unwrap();
-                        info!("block: {:?}", block);
                         Ok(Response::new(block.into_raw()))
                     }
                     execution::block_identifier::Identifier::BlockHash(_) => {
@@ -121,6 +123,7 @@ impl ExecutionService for RollupExecutionService {
         self: Arc<Self>,
         request: Request<execution::ExecuteBlockRequest>,
     ) -> Result<Response<execution::Block>, Status> {
+        debug!("executing block");
         let request = request.into_inner();
         let timestamp = request.timestamp.unwrap();
         let mut transactions: Vec<Bytes> = Vec::new();
@@ -142,11 +145,55 @@ impl ExecutionService for RollupExecutionService {
         let block_height = commitment.soft;
 
         // Execute transactions
-        // let mut executed_deposits: Vec<
-        //     astria_core::generated::astria::sequencerblock::v1::Deposit,
-        // > = Vec::new();
+        debug!("number of deposits detected: {:?}", deposits.len());
+        let mut executed_deposits: Vec<
+            astria_core::generated::astria::sequencerblock::v1::Deposit,
+        > = Vec::new();
+        for raw_deposit in deposits {
+            let deposit =
+                astria_core::sequencerblock::v1::block::Deposit::try_from_raw(raw_deposit.clone())
+                    .unwrap();
+            // fn try_deposit
+            // - fn parse_deposit
+            // - fn verify_deposit
+            // - fn execute_deposit
+            let deposit_address = match astria_core::primitive::v1::Address::from_str(
+                &deposit.destination_chain_address,
+            ) {
+                Ok(address) => address,
+                Err(_) => {
+                    debug!(
+                        "failed verifying deposit address: {:?}",
+                        deposit.destination_chain_address
+                    );
+                    continue;
+                }
+            };
+            debug!(
+                deposit_address = deposit_address.display_address().to_string(),
+                bridge_address = deposit.bridge_address.display_address().to_string(),
+            );
+
+            if state_delta
+                .is_bridge(&deposit.bridge_address)
+                .await
+                .unwrap()
+            {
+                state_delta
+                    .increase_balance(&deposit_address, &deposit.asset, deposit.amount)
+                    .await
+                    .unwrap();
+                executed_deposits.push(raw_deposit.clone());
+            }
+        }
+
+        debug!("number of transactions detected: {:?}", transactions.len());
         let mut executed_transaction = Vec::new();
         for tx in transactions {
+            // fn try_execute_transaction
+            // - fn parse_transaction
+            // - fn verify_transaction
+            // - fn execute_transaction
             let raw_transaction =
                 rollup_core::generated::protocol::transaction::v1::Transaction::decode(tx.clone())
                     .unwrap();
@@ -171,28 +218,49 @@ impl ExecutionService for RollupExecutionService {
             }
             executed_transaction.push(tx);
         }
-        // calculate merkle root of executed transactions
+
+        // calculate the block parameters and store it
+        // fn finalize_block
+        // - fn calculate_merkle_root
+        // - fn compute_block_hash
+        // - fn store_block
+
+        // calculate merkle root of executed transactions and deposits
         let mut executed_transactions_merkle = merkle::Tree::new();
+        let mut executed_deposits_merkle = merkle::Tree::new();
+
+        for executed_tx in executed_deposits {
+            executed_deposits_merkle
+                .push(executed_tx.source_transaction_id.unwrap().inner.as_ref());
+        }
+
         for executed_tx in executed_transaction {
             executed_transactions_merkle.push(executed_tx.as_ref());
         }
 
-        let merkle_root = executed_transactions_merkle.root();
-        let block_hash =
-            compute_block_hash(&request.prev_block_hash, &merkle_root, timestamp.clone());
+        let transaction_merkle_root = executed_transactions_merkle.root();
+        let deposit_merkle_root = executed_deposits_merkle.root();
+
+        let block_hash = compute_block_hash(
+            &request.prev_block_hash,
+            &transaction_merkle_root,
+            &deposit_merkle_root,
+            timestamp.clone(),
+        );
+
         let new_block = astria_core::generated::astria::execution::v1::Block {
             number: block_height + 1,
             parent_block_hash: request.prev_block_hash, // get last block hash
             hash: Bytes::copy_from_slice(&block_hash), // hash with previous block hash and transactions
             timestamp: Some(timestamp),
         };
-
         let block = Block::try_from_raw(new_block.clone()).unwrap();
+
         state_delta.put_block(block, block_height + 1).unwrap();
         let write_batch: cnidarium::StagedWriteBatch =
             self.storage.prepare_commit(state_delta).await.unwrap();
+
         let _hash = self.storage.commit_batch(write_batch).unwrap();
-        info!("executed block: {:?}", new_block);
 
         Ok(Response::new(new_block))
     }
@@ -204,16 +272,19 @@ impl ExecutionService for RollupExecutionService {
         let snapshot = self.storage.latest_snapshot();
         let delta_state = StateDelta::new(snapshot);
         let commitment_state = delta_state.get_commitment_state().await.unwrap();
+
         let soft = delta_state
             .get_block(commitment_state.soft)
             .await
             .unwrap()
             .into_raw();
+
         let firm = delta_state
             .get_block(commitment_state.firm)
             .await
             .unwrap()
             .into_raw();
+
         let celestia_height = commitment_state.celestia;
         Ok(Response::new(execution::CommitmentState {
             soft: Some(soft),
@@ -229,12 +300,14 @@ impl ExecutionService for RollupExecutionService {
         let snapshot = self.storage.latest_snapshot();
         let mut state_delta = StateDelta::new(snapshot);
         let commitment_state_request = request.into_inner().commitment_state.unwrap();
+
         let soft_block_request = commitment_state_request.soft.as_ref().unwrap();
         let firm_block_request = commitment_state_request.firm.as_ref().unwrap();
         let soft_request = soft_block_request.number;
         let firm_request = firm_block_request.number;
         let soft_block = state_delta.get_block(soft_request).await.unwrap();
         let firm_block = state_delta.get_block(firm_request).await.unwrap();
+
         if *soft_block.hash() != soft_block_request.hash {
             error!(
                 "soft block hash does not match: current: {:?},  request: {:?}",
@@ -243,9 +316,11 @@ impl ExecutionService for RollupExecutionService {
             );
             return Err(Status::invalid_argument("Soft block hash does not match"));
         }
+
         if *firm_block.hash() != firm_block_request.hash {
             return Err(Status::invalid_argument("Firm block hash does not match"));
         }
+
         state_delta
             .put_commitment_state(
                 soft_request,
@@ -253,6 +328,7 @@ impl ExecutionService for RollupExecutionService {
                 commitment_state_request.base_celestia_height as u32,
             )
             .unwrap();
+
         let new_commitment_state = execution::CommitmentState {
             soft: Some(soft_block_request.to_owned()),
             firm: Some(firm_block_request.to_owned()),
