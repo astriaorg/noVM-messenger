@@ -1,5 +1,5 @@
 {
-    "rollup_name": "chat-rollup",
+    "rollup_name": "astria-chat",
     "accounts": [
         {
             "address": {
@@ -8,6 +8,19 @@
             "balance": {
                 "lo": 100000000000000000
             }
+        },
+        {
+            "address": {
+                "bech32m": "astria1yf56efahcq786pe5t7paknat40g6q4tsvqtql2"
+            },
+            "balance": {
+                "lo": 100000000000000000
+            }
+        }
+    ],
+    "bridge_accounts": [
+        {
+            "bech32m": "astria1f6yydwp23ucl6kfxt2gqt9vufgpsl3zvz5hwxk"
         }
     ],
     "sequencer_genesis_block_height": 2,

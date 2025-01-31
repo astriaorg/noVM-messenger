@@ -97,6 +97,7 @@ const CHAIN_ID: &str = "astria-chat";
 const FEE_ASSET: &str = "nria";
 const SEQUENCER_PRIVATE_KEY: &str =
     "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90";
+// const BRIDGE_ADDRESS: &str = "astria1d7zjjljc0dsmxa545xkpwxym86g8uvvwhtezcr";
 const INITIAL_HASH: [u8; 32] = [69u8; 32];
 const PREFIX: &str = "astria";
 const ROLLUP_PORT: u16 = 3030;
