@@ -1,6 +1,8 @@
 mod? argo 'dev/argo.just'
 mod? helm 'dev/helm.just'
 
+import 'charts/deploy.just'
+
 # Print this list
 default:
   @just --list
@@ -27,6 +29,16 @@ docker-build crate tag=default_docker_tag repo_name=default_repo_name: (_crate_s
   short_name=$(just _crate_short_name {{crate}})
   set -x
   docker buildx build --load --build-arg TARGETBINARY={{crate}} -f containerfiles/Dockerfile -t {{repo_name}}/$short_name:{{tag}} .
+
+docker-build-frontend image="messenger-frontend:local-v0.0.1":
+  #!/usr/bin/env sh
+  set -eu
+  set -x
+  docker buildx build --platform linux/amd64 --load -f containerfiles/DockerfileFrontend -t {{image}} ./frontend
+
+build-and-load-frontend image="messenger-frontend:local-v0.0.1" namespace=defaultNamespace:
+  @just docker-build-frontend
+  kind load docker-image {{image}} --name {{namespace}}
 
 # Maps a crate name to the shortened name used in the docker tag.
 # If `quiet` is an empty string the shortened name will be echoed. If `quiet` is a non-empty string,

@@ -26,19 +26,15 @@ Please use this project only as a reference or starting point for your own imple
 
 
 ## Run in a local cluster
-### preparation
-Clone the repository and then build a local docker image with
-```sh
-just docker-build chat-rollup
-```
-In a differnet terminal open the astria monorepo [chat-rollup chart branch](https://github.com/astriaorg/astria/tree/quasystaty1/chat-rollup/oracle-chart-connection) which will be used to deploy the chat rollup on astria local dev cluster.
-
 ### deploy to cluster
-In the astria monorepo terminal to deploy the cluster run
 ```sh
 just deploy cluster
 just deploy ingress-controller
 just wait-for-ingress-controller
+```
+build the frontend and load it to the cluster
+```sh
+just build-and-load-frontend
 ```
 then run celestia network and sequencer network with
 ```sh
@@ -46,7 +42,7 @@ just deploy astria-local
 ```
 and finally deploy the chat-rollup
 ```sh
-just deploy dev-rollup
+just deploy chat-rollup
 ```
 on deployment the chat-rollup rest endpoint will serve at (http://rest.astria.localdev.me).
 

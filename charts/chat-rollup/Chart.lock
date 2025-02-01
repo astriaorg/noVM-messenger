@@ -1,0 +1,6 @@
+dependencies:
+- name: composer
+  repository: https://astriaorg.github.io/charts
+  version: 1.0.0
+digest: sha256:a96e68144bfad7abcef22b92809d9676aa4990151eecac9b07b42cd4bfcf7aaa
+generated: "2025-02-01T01:14:34.343082+02:00"
