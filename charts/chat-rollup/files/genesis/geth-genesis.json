@@ -1,0 +1,15 @@
+{
+    "sequencer_genesis_block_height": {{ toString .Values.genesis.sequencerInitialHeight | replace "\"" "" }},
+    "rollup_name": "{{ tpl .Values.genesis.rollupName . }}",
+    "celestia_genesis_block_height": {{ toString .Values.genesis.celestiaInitialHeight | replace "\"" "" }},
+    "celestia_block_variance": {{ toString .Values.genesis.celestiaHeightVariance | replace "\"" "" }},
+    "accounts": [
+    {{- range $index, $value := .Values.genesis.genesisAccounts }}
+    {{- if $index }},{{- end }}
+    {
+        "address": {{ include "sequencer.address" $value.address }},
+        "balance": {{ include "sequencer.toUint128Proto" ( toString $value.balance | replace "\"" "" ) }} 
+    }
+    {{- end }}
+    ]
+}
