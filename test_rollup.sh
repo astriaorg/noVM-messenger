@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 pre_req=true
-ROLLUP_URL="http://localhost:3030"
+ROLLUP_URL=$1
 if ! curl -s --head "$ROLLUP_URL" > /dev/null; then
     echo "Rollup is not running"
     pre_req=false
 fi
-SEQUENCER_URL="http://127.0.0.1:26657"
+SEQUENCER_URL=$2
 if ! curl -s --head "$SEQUENCER_URL" > /dev/null; then
     echo "Rollup is not running"
     pre_req=false

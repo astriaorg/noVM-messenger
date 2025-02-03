@@ -17,8 +17,11 @@ compile-protos:
   cargo run --manifest-path tools/protobuf-compiler/Cargo.toml
 
 test-rollup:
-  @./test_rollup.sh
+  @./test_rollup.sh "http://localhost:3030" "http://127.0.0.1:26657"
 
+test-rollup-charts:
+  @./test_rollup.sh "http://rest.astria-chat.localdev.me" "http://rpc.sequencer.localdev.me"
+  
 default_docker_tag := 'local'
 default_repo_name := 'ghcr.io/astriaorg'
 
