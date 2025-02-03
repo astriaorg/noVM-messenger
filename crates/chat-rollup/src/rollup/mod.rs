@@ -294,7 +294,6 @@ async fn handle_submit_transaction(
 ) -> Result<impl warp::Reply, warp::Rejection> {
     // let snapshot = storage.latest_snapshot();
     // let delta = cnidarium::StateDelta::new(snapshot);
-    info!("received transaction submission request: {:?}", data);
     let raw_transaction = match Transaction::decode(data) {
         Ok(transaction) => transaction,
         Err(_) => {
@@ -303,6 +302,11 @@ async fn handle_submit_transaction(
             )))
         }
     };
+
+    info!(
+        "received transaction submission request: {:?}",
+        raw_transaction
+    );
 
     match composer_client
         .submit_rollup_transaction(SubmitRollupTransactionRequest {

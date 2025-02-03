@@ -6,7 +6,7 @@ config:
   rollupName: "astria-chat"
   # The level at which core astria components will log out
   # Options are: error, warn, info, and debug
-  logLevel: "debug"
+  logLevel: "info"
 
   conductor:
     # Determines what will drive block execution, options are:
@@ -57,7 +57,7 @@ composer:
     bundleQueueCapacity: 40000
     maxSubmitInterval: 2000
     sequencerAddressPrefix: astria
-    sequencerNativeAssetBaseDenomination: "nria"
+    sequencerNativeAssetBaseDenomination: "ntia"
     sequencerRpc: http://node0-sequencer-rpc-service.astria-dev-cluster.svc.cluster.local:26657
     sequencerGrpc: http://node0-sequencer-grpc-service.astria-dev-cluster.svc.cluster.local:8080
     sequencerChainId: sequencer-test-chain-0

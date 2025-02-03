@@ -16,8 +16,8 @@ deploy-chart chart namespace=defaultNamespace:
 delete-chart chart namespace=defaultNamespace:
   helm uninstall {{chart}}-chart --namespace {{namespace}}
 
-load-image image_name tag=default_docker_tag repo=default_repo_name:
-  kind load docker-image {{repo}}/{{image_name}}:{{tag}} --name astria-dev-cluster
+load-image image_name namespace=defaultNamespace:
+  kind load docker-image {{image_name}} --name {{namespace}}
 
 deploy-ingress-controller:
   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
@@ -58,14 +58,14 @@ delete-sequencer name=validatorName:
   @just delete chart {{name}}-sequencer astria-validator-{{name}}
 delete-sequencers: (delete-sequencer "node0") (delete-sequencer "node1") (delete-sequencer "node2")
 
-deploy-chat-rollup:
-  helm dependency update charts/chat-rollup > /dev/null
-  helm install chat-rollup-chart ./charts/chat-rollup \
+deploy-astria-chat:
+  helm dependency update charts/astria-chat > /dev/null
+  helm install astria-chat-chart ./charts/astria-chat \
     -n astria-dev-cluster \
     -f dev/values/rollup/chat-dev.yaml
 
-delete-chat-rollup:
-  @just delete chart chat-rollup
+delete-astria-chat:
+  @just delete chart astria-chat
 
 deploy-astria-local namespace=defaultNamespace: (helm-add-if-not-exist "astria" "https://astriaorg.github.io/charts/")(deploy-celestia-local namespace) (deploy-sequencer)
 delete-astria-local namespace=defaultNamespace: (delete-chart "celestia-local" namespace) (delete-sequencer)

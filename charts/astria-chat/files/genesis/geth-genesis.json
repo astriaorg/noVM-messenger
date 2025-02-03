@@ -1,0 +1,24 @@
+{
+    "rollup_name": "{{ tpl .Values.genesis.rollupName . }}",
+    "accounts": [
+    {{- range $index, $value := .Values.genesis.genesisAccounts }}
+    {{- if $index }},{{- end }}
+    {
+        "address": {{ include "sequencer.address" $value.address }},
+        "balance": {{ include "sequencer.toUint128Proto" ( toString $value.balance | replace "\"" "" ) }} 
+    }
+    {{- end }}
+    ],
+    "bridge_accounts": [
+    {{- range $index, $value := .Values.genesis.genesisBridgeAccounts }}
+    {{- if $index }},{{- end }}
+    {{ include "sequencer.address" $value.address }}
+    {{- end }}
+    ],
+    "sequencer_genesis_block_height": {{ toString .Values.genesis.sequencerInitialHeight | replace "\"" "" }},
+    "celestia_genesis_block_height": {{ toString .Values.genesis.celestiaInitialHeight | replace "\"" "" }},
+    "celestia_block_variance": {{ toString .Values.genesis.celestiaHeightVariance | replace "\"" "" }},
+    "authority_sudo_address": {
+        "bech32m": "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm"
+    }
+}
