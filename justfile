@@ -23,12 +23,11 @@ default_repo_name := 'ghcr.io/astriaorg'
 # Builds docker image for the crate. Defaults to 'local' tag.
 # NOTE: `_crate_short_name` is invoked as dependency of this command so that failure to pass a valid
 # binary will produce a meaningful error message.
-docker-build crate tag=default_docker_tag repo_name=default_repo_name: (_crate_short_name crate "quiet")
+docker-build image="messenger:local-v0.0.1":
   #!/usr/bin/env sh
   set -eu
-  short_name=$(just _crate_short_name {{crate}})
   set -x
-  docker buildx build --load --build-arg TARGETBINARY={{crate}} -f containerfiles/Dockerfile -t {{repo_name}}/$short_name:{{tag}} .
+  docker buildx build --load -f containerfiles/Dockerfile -t {{image}} .
 
 docker-build-frontend image="messenger-frontend:local-v0.0.1":
   #!/usr/bin/env sh

@@ -40,6 +40,11 @@ genesis:
   genesisAccounts: 
     - address: "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm"
       balance: "100000000000"
+    - address: "astria1yf56efahcq786pe5t7paknat40g6q4tsvqtql2"
+      balance: "100000000000"
+  # Can configure the genesis bridge accounts
+  genesisBridgeAccounts:
+   - address: "astria1f6yydwp23ucl6kfxt2gqt9vufgpsl3zvz5hwxk"
 
 config:
   rollupName: "astria-chat"

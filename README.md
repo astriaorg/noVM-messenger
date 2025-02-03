@@ -27,6 +27,8 @@ Please use this project only as a reference or starting point for your own imple
 
 ## Run in a local cluster
 ### deploy to cluster
+For more details on deploying the development cluster, please refer to Astria's [charts repo](https://github.com/astriaorg/charts).
+
 ```sh
 just deploy cluster
 just deploy ingress-controller
@@ -40,9 +42,9 @@ then run celestia network and sequencer network with
 ```sh
 just deploy astria-local
 ```
-and finally deploy the chat-rollup
+and finally deploy the chat rollup
 ```sh
-just deploy chat-rollup
+just deploy astria-chat
 ```
 on deployment the chat-rollup rest endpoint will serve at (http://rest.astria.localdev.me).
 

@@ -7,9 +7,9 @@ genesis:
   addressPrefixes:
     base: "astria"
   authoritySudoAddress: astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm
-  nativeAssetBaseDenomination: nria
+  nativeAssetBaseDenomination: ntia
   allowedFeeAssets:
-    - nria
+    - ntia
   ibc:
     enabled: true
     inboundEnabled: true

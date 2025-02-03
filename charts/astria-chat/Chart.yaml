@@ -1,5 +1,5 @@
 apiVersion: v2
-name: chat-rollup
+name: astria-chat
 description: A Helm chart for Chat rollup in k8s deployed on top of Astria Sequencer Network + Celestia.
 
 # A chart can be either an 'application' or a 'library' chart.
