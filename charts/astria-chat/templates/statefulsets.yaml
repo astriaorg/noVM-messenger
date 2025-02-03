@@ -18,7 +18,7 @@ spec:
     spec:
       initContainers:
         - name: init-messenger
-          command: [ "/scripts/init-geth.sh" ]
+          command: [ "/scripts/init-rollup.sh" ]
           image: {{ include "rollup.image" . }}
           imagePullPolicy: {{ .Values.images.chat.pullPolicy }}
           envFrom:

@@ -29,6 +29,12 @@ Please use this project only as a reference or starting point for your own imple
 ### deploy to cluster
 For more details on deploying the development cluster, please refer to Astria's [charts repo](https://github.com/astriaorg/charts).
 
+To deploy the full stack in one command run
+```sh
+just deploy-all
+```
+
+To deploy components sequentially run
 ```sh
 just deploy cluster
 just deploy ingress-controller
@@ -36,6 +42,7 @@ just wait-for-ingress-controller
 ```
 build the frontend and load it to the cluster
 ```sh
+just install-frontend
 just build-and-load-frontend
 ```
 then run celestia network and sequencer network with
@@ -45,9 +52,14 @@ just deploy astria-local
 and finally deploy the chat rollup
 ```sh
 just deploy astria-chat
+just wait-for-astria-chat
 ```
-on deployment the chat-rollup rest endpoint will serve at (http://rest.astria.localdev.me).
+on deployment the chat-rollup rest endpoint will serve at (http://rest.astria-chat.localdev.me) and the frontend at (http://chat.astria-chat.localdev.me).
 
+To delete the cluster run
+```sh
+just delete-all
+```
 ## Interact using the cli
 Install the rollup cli by running 
 ```sh

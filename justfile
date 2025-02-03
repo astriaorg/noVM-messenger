@@ -2,7 +2,6 @@ mod? argo 'dev/argo.just'
 mod? helm 'dev/helm.just'
 
 import 'charts/deploy.just'
-
 # Print this list
 default:
   @just --list
@@ -10,6 +9,9 @@ default:
 # Build and install the rollup CLI
 install-cli:
   cargo install --path ./crates/rollup-cli --locked
+
+install-frontend:
+  cd frontend && npm install --prefer-offline --no-audit --no-update-notifier --legacy-peer-deps
 
 compile-protos:
   cargo run --manifest-path tools/protobuf-compiler/Cargo.toml
@@ -33,7 +35,7 @@ docker-build-frontend image="messenger-frontend:local-v0.0.1":
   #!/usr/bin/env sh
   set -eu
   set -x
-  docker buildx build --platform linux/amd64 --load -f containerfiles/DockerfileFrontend -t {{image}} ./frontend
+  docker buildx build --load -f containerfiles/DockerfileFrontend -t {{image}} ./frontend
 
 build-and-load-frontend image="messenger-frontend:local-v0.0.1" namespace=defaultNamespace:
   @just docker-build-frontend

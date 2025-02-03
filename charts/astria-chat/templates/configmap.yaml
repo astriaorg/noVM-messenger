@@ -43,7 +43,7 @@ data:
   home_dir: '{{ include "rollup.HomeDir" .  }}'
   data_dir: '{{ include "rollup.DataDir" .  }}'
   DB_FILEPATH: '{{ include "rollup.DataDir" .  }}'
-  GENESIS_FILEPATH: '/scripts/geth-genesis.json'
+  GENESIS_FILEPATH: '/scripts/rollup-genesis.json'
   EXECUTION_GRPC_ADDR: "127.0.0.1:50051"
   COMPOSER_ADDR: "http://composer-service.astria-dev-cluster.svc.cluster.local:50052"
   LOG: "info"
@@ -68,7 +68,7 @@ metadata:
   name: {{ include "rollup.name" . }}-executor-scripts
   namespace: {{ include "rollup.namespace" .  }}
 data:
-  geth-genesis.json: |
-    {{- tpl (.Files.Get "files/genesis/geth-genesis.json") $ | nindent 4 }}
-  init-geth.sh: |
-    {{- tpl (.Files.Get "files/scripts/init-geth.sh") $ | nindent 4 }}
+  rollup-genesis.json: |
+    {{- tpl (.Files.Get "files/genesis/rollup-genesis.json") $ | nindent 4 }}
+  init-rollup.sh: |
+    {{- tpl (.Files.Get "files/scripts/init-rollup.sh") $ | nindent 4 }}
