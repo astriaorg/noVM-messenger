@@ -27,6 +27,9 @@ wait-for-ingress-controller:
     sleep 1; \
   done
 
+wait-for-astria-chat:
+  kubectl rollout status --watch statefulset/astria-chat-chat -n astria-dev-cluster --timeout=600s
+
 hubbleEnabled := "false"
 deploy-cluster namespace=defaultNamespace enableHubble=hubbleEnabled:
   kind create cluster --image kindest/node:v1.28.9 --config dev/kubernetes/kind-cluster-config.yml
@@ -69,6 +72,8 @@ delete-astria-chat:
 
 deploy-astria-local namespace=defaultNamespace: (helm-add-if-not-exist "astria" "https://astriaorg.github.io/charts/")(deploy-celestia-local namespace) (deploy-sequencer)
 delete-astria-local namespace=defaultNamespace: (delete-chart "celestia-local" namespace) (delete-sequencer)
+
+deploy-all namespace=defaultNamespace: (deploy-cluster) (deploy-ingress-controller) (wait-for-ingress-controller) (deploy-astria-local) (install-frontend) (build-and-load-frontend) (deploy-astria-chat) (wait-for-astria-chat)
 
 clean:
   kind delete cluster --name astria-dev-cluster

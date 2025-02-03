@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 pre_req=true
-ROLLUP_URL="http://rest.astria-chat.localdev.me"
+ROLLUP_URL="http://localhost:3030"
 if ! curl -s --head "$ROLLUP_URL" > /dev/null; then
     echo "Rollup is not running"
     pre_req=false
 fi
-SEQUENCER_URL="http://rpc.sequencer.localdev.me"
+SEQUENCER_URL="http://127.0.0.1:26657"
 if ! curl -s --head "$SEQUENCER_URL" > /dev/null; then
     echo "Rollup is not running"
     pre_req=false
@@ -70,7 +70,7 @@ sleep 5
 
 astria-cli sequencer balance get --sequencer-url $SEQUENCER_URL $CAROL_ADDRESS
 
-# echo " -- Init Bridge Account -- "
+echo " -- Init Bridge Account -- "
 astria-cli sequencer init-bridge-account --private-key $CAROL_PRIV_KEY --sequencer-url $SEQUENCER_URL \
     --sequencer.chain-id sequencer-test-chain-0 \
     --rollup-name astria-chat \
