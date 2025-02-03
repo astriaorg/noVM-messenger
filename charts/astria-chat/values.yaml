@@ -1,0 +1,183 @@
+global:
+  namespaceOverride: ""
+  replicaCount: 1
+  # Whether to use tty readable logging for astria services, when false use json.
+  # Best to be false in production environments, true for clean logs on local dev.
+  useTTY: false
+  dev: false
+
+images:
+  chat:
+    repo: ghcr.io/astriaorg/novm-messenger
+    pullPolicy: IfNotPresent
+    tag: latest
+    devTag: latest
+  frontend:
+    repo: messenger-frontend
+    pullPolicy: Always
+    tag: local-v0.0.1
+    devTag: local-v0.0.1
+  conductor:
+    repo: ghcr.io/astriaorg/conductor
+    pullPolicy: IfNotPresent
+    tag: 1.0.0
+    devTag: latest
+
+
+genesis:
+  ## These values are used to configure the genesis block of the rollup chain
+  ## no defaults as they are unique to each chain
+
+  # The name of the rollup chain, used to generate the Rollup ID
+  rollupName: "astria-chat"
+  # Block height to start syncing rollup from, lowest possible is 2
+  sequencerInitialHeight: "2"
+  # The first Celestia height to utilize when looking for rollup data
+  celestiaInitialHeight: "2"
+  # The variance in Celestia height to allow before halting the chain
+  celestiaHeightVariance: "1000"
+  # Can configure the genesis allocs for the chain
+  genesisAccounts: 
+    - address: "astria1rsxyjrcm255ds9euthjx6yc3vrjt9sxrm9cfgm"
+      balance: "100000000000"
+    - address: "astria1yf56efahcq786pe5t7paknat40g6q4tsvqtql2"
+      balance: "100000000000"
+  # Can configure the genesis bridge accounts
+  genesisBridgeAccounts:
+   - address: "astria1f6yydwp23ucl6kfxt2gqt9vufgpsl3zvz5hwxk"
+
+config:
+  rollupName: "astria-chat"
+  # The level at which core astria components will log out
+  # Options are: error, warn, info, and debug
+  logLevel: "debug"
+
+  conductor:
+    # Determines what will drive block execution, options are:
+    # - "SoftOnly" -> blocks are only pulled from the sequencer
+    # - "FirmOnly" -> blocks are only pulled from DA
+    # - "SoftAndFirm" -> blocks are pulled from both the sequencer and DA
+    executionCommitLevel: 'SoftAndFirm'
+    # The chain id of the Astria sequencer chain conductor communicates with
+    sequencerChainId: ""
+    # The expected fastest block time possible from sequencer, determines polling
+    # rate.
+    sequencerBlockTimeMs: 2000
+    # The expected fastest block time possible from DA, determines polling rate.
+    celestiaBlockTimeMs: 6000
+    # URL path for the sequencer
+    sequencerRpc: ""
+    # gRPC path for the sequencer
+    sequencerGrpc: ""
+    # The maximum number of requests to make to the sequencer per second
+    sequencerRequestsPerSecond: 500
+    # The chain id of the celestia network the conductor communicates with
+    celestiaChainId: ""
+
+  celestia:
+    # if config.rollup.executionLevel is NOT 'SoftOnly' AND celestia-node is not enabled
+    # the rpc, ws, and token fields must be set to access celestia network.
+    rpc: ""
+    token: ""
+
+metrics:
+  # set to enable prometheus metrics
+  enabled: false
+
+otel:
+  enabled: false
+  serviceNamePrefix: '{{ include "rollup.name" . }}'
+  endpoint: ""
+  tracesEndpoint: ""
+  tracesCompression: "gzip"
+  tracesTimeout: "10"
+  otlpHeaders: ""
+  traceHeaders: ""
+
+serviceMonitor:
+  # set to enable port svc and service monitor
+  enabled: false
+  port: 6060
+  additionalLabels:
+    release: kube-prometheus-stack
+alerting:
+  enabled: false
+  interval: ""
+  additionalLabels:
+    release: kube-prometheus-stack
+  annotations: {}
+  # scrapeTimeout: 10s
+  # path: /metrics
+ingress:
+  enabled: false
+  labels: {}
+  hostname: localdev.me
+  className: nginx
+  services:
+    rest:
+      enabled: true
+      hosts:
+        - 'rest.{{ include "rollup.name" . }}.{{ .Values.ingress.hostname }}'
+      path: /
+      pathType: Prefix
+      service:
+        name: '{{ include "rollup.name" . }}-chat-service'
+        port:
+          name: rest-svc
+      annotations: {}
+      labels: {}
+      tls: {}
+      #  - secretName: chart-example-tls
+      #    hosts:
+      #      - chart-example.local
+    frontend:
+      enabled: true
+      hosts:
+        - 'chat.{{ include "rollup.name" . }}.{{ .Values.ingress.hostname }}'
+      path: /
+      pathType: Prefix
+      service:
+        name: '{{ include "rollup.name" . }}-chat-frontend-service'
+        port:
+          name: frontend
+      annotations: {}
+      labels: {}
+      tls: {}
+      #  - secretName: chart-example-tls
+      #    hosts:
+      #      - chart-example.local
+
+# Default persistent storage values
+# NOTE - `rollupName` will be used with `persistentVolumeName` to generate names for kubernetes resources.
+#  e.g. astria-executor-pv, astria-executor-pvc
+resources:
+  conductor:
+    requests:
+      cpu: 100m
+      memory: 200Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  chat:
+    requests:
+      cpu: 0.25
+      memory: 256Mi
+    limits:
+      cpu: 2
+      memory: 1Gi
+
+storage:
+  enabled: false
+  local: true
+  entities:
+    rollupSharedStorage:
+      size: "5Gi"
+      persistentVolumeName: "rollup-shared-storage"
+      path: "/data/rollup-data"
+
+# Default service ports
+ports:
+  rest: 3030
+  executionGRPC: 50051
+  metrics: 6060
+  conductorMetrics: 9000

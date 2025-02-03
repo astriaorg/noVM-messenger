@@ -1,6 +1,7 @@
 mod? argo 'dev/argo.just'
 mod? helm 'dev/helm.just'
 
+import 'charts/deploy.just'
 # Print this list
 default:
   @just --list
@@ -8,6 +9,9 @@ default:
 # Build and install the rollup CLI
 install-cli:
   cargo install --path ./crates/rollup-cli --locked
+
+install-frontend:
+  cd frontend && npm install --prefer-offline --no-audit --no-update-notifier --legacy-peer-deps
 
 compile-protos:
   cargo run --manifest-path tools/protobuf-compiler/Cargo.toml
@@ -21,12 +25,21 @@ default_repo_name := 'ghcr.io/astriaorg'
 # Builds docker image for the crate. Defaults to 'local' tag.
 # NOTE: `_crate_short_name` is invoked as dependency of this command so that failure to pass a valid
 # binary will produce a meaningful error message.
-docker-build crate tag=default_docker_tag repo_name=default_repo_name: (_crate_short_name crate "quiet")
+docker-build image="messenger:local-v0.0.1":
   #!/usr/bin/env sh
   set -eu
-  short_name=$(just _crate_short_name {{crate}})
   set -x
-  docker buildx build --load --build-arg TARGETBINARY={{crate}} -f containerfiles/Dockerfile -t {{repo_name}}/$short_name:{{tag}} .
+  docker buildx build --load -f containerfiles/Dockerfile -t {{image}} .
+
+docker-build-frontend image="messenger-frontend:local-v0.0.1":
+  #!/usr/bin/env sh
+  set -eu
+  set -x
+  docker buildx build --load -f containerfiles/DockerfileFrontend -t {{image}} ./frontend
+
+build-and-load-frontend image="messenger-frontend:local-v0.0.1" namespace=defaultNamespace:
+  @just docker-build-frontend
+  kind load docker-image {{image}} --name {{namespace}}
 
 # Maps a crate name to the shortened name used in the docker tag.
 # If `quiet` is an empty string the shortened name will be echoed. If `quiet` is a non-empty string,

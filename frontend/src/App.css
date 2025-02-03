@@ -1,0 +1,153 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+.message-list {
+  min-height: 500px;
+  max-height: 500px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.message {
+  width: 100%;
+  margin-top: 0.5rem;
+  display: flex;
+}
+
+.message.-right {
+  justify-content: flex-end;
+}
+
+.message.-left {
+  justify-content: flex-start;
+}
+
+.nes-field.is-inline {
+  display: flex;
+  width: 100%;
+}
+
+.nes-input {
+  flex-grow: 1;
+  margin-right: 0.5rem;
+}
+
+.nes-container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+}
+
+.footer {
+  margin-top: 3rem;
+}
+
+.footer i {
+  margin: 0 2rem;
+}
+
+.nes-balloon {
+  padding: 0.5rem 1rem !important;
+}
+
+.nes-kirby {
+  width: 48px;
+  height: 48px;
+}
+
+.nes-mario {
+  width: 42px;
+  height: 48px;
+}
+
+.nes-pokeball {
+  width: 42px;
+  height: 42px;
+}
+
+.nes-ash {
+  width: 42px;
+  height: 45px;
+}
+
+.nes-bulbasaur {
+  width: 60px;
+  height: 51px;
+}
+
+.nes-charmander {
+  width: 63px;
+  height: 54px;
+}
+
+.nes-squirtle {
+  width: 63px;
+  height: 51px;
+}
+
+.nes-mario::before,
+.nes-ash::before,
+.nes-pokeball::before,
+.nes-bulbasaur::before,
+.nes-charmander::before,
+.nes-squirtle::before,
+.nes-kirby::before {
+  zoom: 0.5;
+}
+
+@media screen and (max-width: 800px) {
+  .nes-container {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .nes-field.is-inline {
+    flex-direction: column;
+  }
+
+  .nes-input {
+    margin-bottom: 10px;
+  }
+}
