@@ -3,7 +3,6 @@ syntax = "proto3";
 package genesis.v1;
 
 import "astria/primitive/v1/types.proto";
-import "astria/protocol/fees/v1/types.proto";
 
 message GenesisAppState {
   string rollup_name = 1;

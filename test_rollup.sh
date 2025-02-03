@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 pre_req=true
-ROLLUP_URL="http://localhost:3030"
+ROLLUP_URL=$1
 if ! curl -s --head "$ROLLUP_URL" > /dev/null; then
     echo "Rollup is not running"
     pre_req=false
 fi
-SEQUENCER_URL="http://127.0.0.1:26657"
+SEQUENCER_URL=$2
 if ! curl -s --head "$SEQUENCER_URL" > /dev/null; then
     echo "Rollup is not running"
     pre_req=false
@@ -33,7 +33,7 @@ CAROL_PRIV_KEY=0e951afdcbefc420fe6f71b82b0c28c11eb6ee5d95be0886ce9dbf6fa512debc
 echo " == Sending Test Message == "
 
 rollup-cli query texts --rollup-url $ROLLUP_URL
-rollup-cli submit text --private-key $PRIV_KEY --rollup-url $ROLLUP_URL "hi" "alice"
+rollup-cli submit text --private-key $BOB_PRIV_KEY --rollup-url $ROLLUP_URL "hi" "alice"
 sleep 5
 rollup-cli query texts --rollup-url $ROLLUP_URL
 
@@ -59,7 +59,7 @@ rollup-cli query balance --rollup-url $ROLLUP_URL --asset ntia $BOB_ADDRESS
 
 echo " -- Transfer -- "
 astria-cli sequencer transfer --amount 50 \
-    --private-key $PRIV_KEY  \
+    --private-key $BRIDGE_PRIV_KEY  \
     --sequencer.chain-id sequencer-test-chain-0 \
     --sequencer-url $SEQUENCER_URL \
     --fee-asset=ntia \
@@ -83,7 +83,7 @@ echo " -- Lock -- "
 astria-cli sequencer bridge-lock $CAROL_ADDRESS \
     --amount 1 \
     --destination-chain-address $BOB_ADDRESS \
-    --private-key $PRIV_KEY  \
+    --private-key $BRIDGE_PRIV_KEY  \
     --sequencer.chain-id sequencer-test-chain-0 \
     --sequencer-url $SEQUENCER_URL \
     --fee-asset=ntia \

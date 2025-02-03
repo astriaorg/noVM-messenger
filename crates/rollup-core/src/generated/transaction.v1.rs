@@ -35,9 +35,9 @@ impl ::prost::Name for Action {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Transfer {
     #[prost(message, optional, tag = "1")]
-    pub to: ::core::option::Option<astria_core::generated::astria::primitive::v1::Address>,
+    pub to: ::core::option::Option<::astria_core::generated::astria::primitive::v1::Address>,
     #[prost(message, optional, tag = "2")]
-    pub amount: ::core::option::Option<astria_core::generated::astria::primitive::v1::Uint128>,
+    pub amount: ::core::option::Option<::astria_core::generated::astria::primitive::v1::Uint128>,
     /// the asset to be transferred
     #[prost(string, tag = "3")]
     pub asset: ::prost::alloc::string::String,

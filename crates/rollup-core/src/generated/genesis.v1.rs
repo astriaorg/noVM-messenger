@@ -14,10 +14,10 @@ pub struct GenesisAppState {
     pub accounts: ::prost::alloc::vec::Vec<Account>,
     #[prost(message, repeated, tag = "6")]
     pub bridge_accounts:
-        ::prost::alloc::vec::Vec<astria_core::generated::astria::primitive::v1::Address>,
+        ::prost::alloc::vec::Vec<::astria_core::generated::astria::primitive::v1::Address>,
     #[prost(message, optional, tag = "7")]
     pub authority_sudo_address:
-        ::core::option::Option<astria_core::generated::astria::primitive::v1::Address>,
+        ::core::option::Option<::astria_core::generated::astria::primitive::v1::Address>,
 }
 impl ::prost::Name for GenesisAppState {
     const NAME: &'static str = "GenesisAppState";
@@ -33,9 +33,9 @@ impl ::prost::Name for GenesisAppState {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Account {
     #[prost(message, optional, tag = "1")]
-    pub address: ::core::option::Option<astria_core::generated::astria::primitive::v1::Address>,
+    pub address: ::core::option::Option<::astria_core::generated::astria::primitive::v1::Address>,
     #[prost(message, optional, tag = "2")]
-    pub balance: ::core::option::Option<astria_core::generated::astria::primitive::v1::Uint128>,
+    pub balance: ::core::option::Option<::astria_core::generated::astria::primitive::v1::Uint128>,
 }
 impl ::prost::Name for Account {
     const NAME: &'static str = "Account";

@@ -13,7 +13,7 @@ use std::{
     process::Command,
 };
 
-const OUT_DIR: &str = "../../rollup-core/src/generated";
+const OUT_DIR: &str = "../../crates/rollup-core/src/generated";
 const SRC_DIR: &str = "../../proto";
 
 const INCLUDES: &[&str] = &[SRC_DIR];
@@ -70,6 +70,16 @@ fn main() {
         ])
         .client_mod_attribute(".", "#[cfg(feature=\"client\")]")
         .server_mod_attribute(".", "#[cfg(feature=\"server\")]")
+        // Tell the generated protos to use `astria_core::generated` instead of `super::super`
+        .type_attribute(
+            ".astria.primitive.v1",
+            "#[path = \"astria_core::generated::astria::primitive::v1\"]",
+        )
+        .extern_path(
+            ".astria.primitive.v1",
+            "::astria_core::generated::astria::primitive::v1",
+        )
+        // end of the fix
         .extern_path(".astria_vendored.penumbra", "::penumbra-proto")
         .type_attribute(".astria.primitive.v1.Uint128", "#[derive(Copy)]")
         .type_attribute(
@@ -106,6 +116,53 @@ fn main() {
 
     let mut after_build = build_content_map(&out_dir);
     clean_non_astria_code(&mut after_build);
+
+    // Post-processing step to fix any remaining super::super references
+    fix_module_paths(&after_build);
+}
+
+fn format_file(path: &Path) {
+    match Command::new("rustfmt").arg(path).output() {
+        Ok(_) => (),
+        Err(e) => eprintln!("Failed to format {}: {}", path.display(), e),
+    }
+}
+
+fn fix_module_paths(content_map: &ContentMap) {
+    for (name, path) in &content_map.files {
+        if name == "mod.rs" {
+            continue;
+        }
+
+        if let Ok(mut content) = std::fs::read_to_string(path) {
+            // Fix module paths
+            content = content.replace(
+                "super::super::astria::primitive::v1",
+                "astria_core::generated::astria::primitive::v1",
+            );
+
+            // Add clippy attribute to serde implementations
+            if name.ends_with(".serde.rs") {
+                // Add the attribute just after the opening impl for Visitor
+                content = content.replace(
+                    "impl<'de> serde::de::Visitor<'de>",
+                    "#[allow(clippy::needless_lifetimes)]\nimpl<'de> serde::de::Visitor<'de>",
+                );
+            }
+
+            if let Err(e) = std::fs::write(path, &content) {
+                eprintln!(
+                    "Failed to write updated content to {}: {}",
+                    path.display(),
+                    e
+                );
+                continue;
+            }
+
+            // Format the file using rustfmt
+            format_file(path);
+        }
+    }
 }
 
 fn prost_build_config() -> prost_build::Config {

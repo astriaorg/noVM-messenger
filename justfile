@@ -1,14 +1,60 @@
+mod? argo 'dev/argo.just'
+mod? helm 'dev/helm.just'
+
+import 'charts/deploy.just'
+# Print this list
 default:
   @just --list
 
+# Build and install the rollup CLI
 install-cli:
-  cargo install --path ./rollup-cli --locked
+  cargo install --path ./crates/rollup-cli --locked
+
+install-frontend:
+  cd frontend && npm install --prefer-offline --no-audit --no-update-notifier --legacy-peer-deps
 
 compile-protos:
   cargo run --manifest-path tools/protobuf-compiler/Cargo.toml
 
 test-rollup:
-  @./test_rollup.sh
+  @./test_rollup.sh "http://localhost:3030" "http://127.0.0.1:26657"
+
+test-rollup-charts:
+  @./test_rollup.sh "http://rest.astria-chat.localdev.me" "http://rpc.sequencer.localdev.me"
+  
+default_docker_tag := 'local'
+default_repo_name := 'ghcr.io/astriaorg'
+
+# Builds docker image for the crate. Defaults to 'local' tag.
+# NOTE: `_crate_short_name` is invoked as dependency of this command so that failure to pass a valid
+# binary will produce a meaningful error message.
+docker-build image="messenger:local-v0.0.1":
+  #!/usr/bin/env sh
+  set -eu
+  set -x
+  docker buildx build --load -f containerfiles/Dockerfile -t {{image}} .
+
+docker-build-frontend image="messenger-frontend:local-v0.0.1":
+  #!/usr/bin/env sh
+  set -eu
+  set -x
+  docker buildx build --load -f containerfiles/DockerfileFrontend -t {{image}} ./frontend
+
+build-and-load-frontend image="messenger-frontend:local-v0.0.1" namespace=defaultNamespace:
+  @just docker-build-frontend
+  kind load docker-image {{image}} --name {{namespace}}
+
+# Maps a crate name to the shortened name used in the docker tag.
+# If `quiet` is an empty string the shortened name will be echoed. If `quiet` is a non-empty string,
+# the only output will be in the case of an error, where the input `crate` is not a valid one.
+_crate_short_name crate quiet="":
+  #!/usr/bin/env sh
+  set -eu
+  case {{crate}} in
+    chat-rollup) short_name=chat-rollup ;;
+    *) echo "{{crate}} is not a supported binary" && exit 2
+  esac
+  [ -z {{quiet}} ] && echo $short_name || true
 
 ####################################################
 ## Scripts related to formatting code and linting ##
