@@ -61,7 +61,7 @@ delete-sequencer name=validatorName:
   @just delete chart {{name}}-sequencer astria-validator-{{name}}
 delete-sequencers: (delete-sequencer "node0") (delete-sequencer "node1") (delete-sequencer "node2")
 
-deploy-astria-chat:
+deploy-novm-chat-rollup:
   helm dependency update charts/astria-chat > /dev/null
   helm install astria-chat-chart ./charts/astria-chat \
     -n astria-dev-cluster \
@@ -73,7 +73,7 @@ delete-astria-chat:
 deploy-astria-local namespace=defaultNamespace: (helm-add-if-not-exist "astria" "https://astriaorg.github.io/charts/")(deploy-celestia-local namespace) (deploy-sequencer)
 delete-astria-local namespace=defaultNamespace: (delete-chart "celestia-local" namespace) (delete-sequencer)
 
-deploy-all namespace=defaultNamespace: (deploy-cluster) (deploy-ingress-controller) (wait-for-ingress-controller) (deploy-astria-local) (install-frontend) (build-and-load-frontend) (deploy-astria-chat) (wait-for-astria-chat)
+deploy-astria-chat namespace=defaultNamespace: (deploy-cluster) (deploy-ingress-controller) (wait-for-ingress-controller) (deploy-astria-local) (install-frontend) (build-and-load-frontend) (deploy-novm-chat-rollup) (wait-for-astria-chat)
 
 clean:
   kind delete cluster --name astria-dev-cluster
