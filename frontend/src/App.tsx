@@ -132,11 +132,9 @@ function App() {
         <div className="message-list">
           {messages.map((message, index) => (
             <section key={index} className={`message -${message.from}`}>
-              {message.from === 'left' && <i className={getAvatar(message.sender)}></i>}
               <div className={`nes-balloon from-${message.from}`}>
                 <p>{message.text}</p>
               </div>
-              {message.from === 'right' && <i className={getAvatar(message.sender)}></i>}
             </section>
           ))}
           <div ref={endOfMessagesRef} />
