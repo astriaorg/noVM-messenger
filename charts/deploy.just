@@ -70,8 +70,8 @@ deploy-novm-chat-rollup:
 delete-astria-chat:
   @just delete chart astria-chat
 
-deploy-astria-local namespace=defaultNamespace: (helm-add-if-not-exist "astria" "https://astriaorg.github.io/charts/")(deploy-celestia-local namespace) (deploy-sequencer)
-delete-astria-local namespace=defaultNamespace: (delete-chart "celestia-local" namespace) (delete-sequencer)
+deploy-astria-local namespace=defaultNamespace: (helm-add-if-not-exist "astria" "https://astriaorg.github.io/charts/") (deploy-sequencer)
+delete-astria-local namespace=defaultNamespace: (delete-sequencer)
 
 deploy-astria-chat namespace=defaultNamespace: (deploy-cluster) (deploy-ingress-controller) (wait-for-ingress-controller) (deploy-astria-local) (install-frontend) (build-and-load-frontend) (deploy-novm-chat-rollup) (wait-for-astria-chat)
 
