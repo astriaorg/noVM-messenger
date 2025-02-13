@@ -133,7 +133,7 @@ function App() {
           {messages.map((message, index) => (
             <section key={index} className={`message -${message.from}`}>
               <div className={`nes-balloon from-${message.from}`}>
-                <p>{message.text}</p>
+                <p>{message.sender}: {message.text}</p>
               </div>
             </section>
           ))}
